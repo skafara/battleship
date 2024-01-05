@@ -20,8 +20,8 @@ namespace ntwrk {
 
 		//size_t Has_Bytes();
 
-		//void Read_Bytes(uint8_t &buf, size_t cnt);
-		//void Write_Bytes(const uint8_t &buf, size_t cnt);
+		std::byte Read_Byte() const;
+		void Write_Byte(std::byte byte) const;
 
 	private:
 		int _fd;

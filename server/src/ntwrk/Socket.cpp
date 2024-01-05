@@ -30,4 +30,18 @@ namespace ntwrk {
 		}
 	}
 
+	std::byte Socket::Read_Byte() const {
+		std::byte byte;
+		if (read(_fd, &byte, 1) != 1) {
+			throw -1;
+		}
+		return byte;
+	}
+
+	void Socket::Write_Byte(std::byte byte) const {
+		if (write(_fd, &byte, 1) != 1) {
+			throw -1;
+		}
+	}
+
 } // ntwrk

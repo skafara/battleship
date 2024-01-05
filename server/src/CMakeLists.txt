@@ -10,5 +10,12 @@ add_executable(bserver main.cpp
         ntwrk/Socket.cpp
         ntwrk/SocketAcceptor.cpp
 
-        msgs/MsgCommunicator.cpp
+        msgs/Communicator.cpp
+        msgs/Message.cpp
+        msgs/Messages.cpp
+
+        game/Client.cpp
+        game/StateMachine.cpp
+        game/Room.cpp
+        game/Board.cpp
 )

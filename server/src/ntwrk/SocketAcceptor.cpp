@@ -32,7 +32,7 @@ namespace ntwrk {
 		}
 	}
 
-	SocketAcceptor::SocketAcceptor(SocketAcceptor &&other) noexcept : _socket(other._socket) {
+	/*SocketAcceptor::SocketAcceptor(SocketAcceptor &&other) noexcept : _socket(other._socket) {
 		other._socket = -1;
 	}
 
@@ -42,7 +42,7 @@ namespace ntwrk {
 		other._socket = -1;
 
 		return *this;
-	}
+	}*/
 
 	SocketAcceptor::~SocketAcceptor() {
 		if (_socket != -1) {

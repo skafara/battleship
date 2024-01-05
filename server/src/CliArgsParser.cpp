@@ -14,8 +14,7 @@ void CliArgsParser::Ignore_Opt_Errs() {
 }
 
 bool CliArgsParser::Is_Help(int argc, char **argv) {
-	int opt{};
-	while ((opt = getopt_long(argc, argv, "h", kOptions, nullptr)) != -1) {
+	for (int opt; (opt = getopt_long(argc, argv, "h", kOptions, nullptr)) != -1; ) {
 		if (opt == 'h') {
 			Reset_Opt_Ind();
 			return true;
@@ -34,8 +33,7 @@ CliArgsParser::Result CliArgsParser::Parse(int argc, char **argv) {
 
 	std::array<bool, kExpected_Args_Cnt> parsed{};
 	try {
-		int opt;
-		while ((opt = getopt_long(argc, argv, "i:p:c:r:", kOptions, nullptr)) != -1) {
+		for (int opt; (opt = getopt_long(argc, argv, "i:p:c:r:", kOptions, nullptr)) != -1; ) {
 			switch (opt) {
 				case 'i':
 					ip = Parse_IP(optarg);
@@ -53,17 +51,19 @@ CliArgsParser::Result CliArgsParser::Parse(int argc, char **argv) {
 					lim_rooms = Parse_Lim_Rooms(optarg);
 					parsed[3] = true;
 					break;
+				default:
+					break;
 			}
 		}
 	}
-	catch (int i) {
+	catch (const std::invalid_argument &e) {
 		Reset_Opt_Ind();
-		throw i;
+		throw e;
 	}
 
 	Reset_Opt_Ind();
 	if (!std::ranges::all_of(parsed, [](const bool item) { return item; })) {
-		throw -1;
+		throw std::invalid_argument{"Missing required options"};
 	}
 	return {ip, port, lim_clients, lim_rooms};
 }
@@ -83,22 +83,32 @@ std::string CliArgsParser::Parse_IP(const std::string &str) {
 		return str;
 	}
 
-	throw -1;
+	throw std::invalid_argument{"Invalid IP address '" + str + "'"};
 }
 
 uint16_t CliArgsParser::Parse_Port(const std::string &str) {
-	const int num = std::stoi(str);
+	const long long num = std::stoll(str);
 	if (num < 0 || num > std::numeric_limits<uint16_t>::max()) {
-		throw -1;
+		throw std::invalid_argument{"Invalid port '" + str + "'"};
 	}
 
 	return static_cast<uint16_t>(num);
 }
 
 size_t CliArgsParser::Parse_Lim_Clients(const std::string &str) {
-	return std::stoull(str); // TODO
+	const long long num = std::stoll(str);
+	if (num < 0 || num > std::numeric_limits<size_t>::max()) {
+		throw std::invalid_argument{"Invalid clients count limit '" + str + "'"};
+	}
+
+	return num;
 }
 
 size_t CliArgsParser::Parse_Lim_Rooms(const std::string &str) {
-	return std::stoull(str); // TODO
+	const long long num = std::stoll(str);
+	if (num < 0 || num > std::numeric_limits<size_t>::max()) {
+		throw std::invalid_argument{"Invalid rooms count limit '" + str + "'"};
+	}
+
+	return num;
 }

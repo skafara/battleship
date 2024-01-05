@@ -17,8 +17,8 @@ namespace ntwrk {
 		SocketAcceptor(const SocketAcceptor &other) = delete;
 		SocketAcceptor &operator=(const SocketAcceptor &other) = delete;
 
-		SocketAcceptor(SocketAcceptor &&other) noexcept;
-		SocketAcceptor &operator=(SocketAcceptor &&other) noexcept;
+		/*SocketAcceptor(SocketAcceptor &&other) noexcept;
+		SocketAcceptor &operator=(SocketAcceptor &&other) noexcept;*/
 
 		~SocketAcceptor();
 
