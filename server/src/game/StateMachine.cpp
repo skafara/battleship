@@ -33,19 +33,29 @@ namespace game {
 		{{State::kIn_Game, msgs::MessageType::kTurn}, &StateMachine::Handle_Turn}
 	};
 
+	void StateMachine::Run(I_ServerOps &server, std::shared_ptr<Client> client) {
+		StateMachine{server, client}.Run();
+	}
+
 	StateMachine::StateMachine(I_ServerOps &server, std::shared_ptr<game::Client> client) :
-		_server(server), _client(client), _state(State::kInit) {
+		_server(server), _client(client) {
 		//
 	}
 
 	void StateMachine::Run() {
 		for (;;) {
-			const msgs::Message msg = _client->Await_Msg(kExpected_Msgs.at(_state));
+			const msgs::Message msg = _client->Await_Msg();
 
-			const std::pair<State, msgs::MessageType> pair{_state, msg.Get_Type()};
+			std::lock_guard lck{_server.Get_Mutex()};
+
+			if (!kExpected_Msgs.at(_client->Get_State()).contains(msg.Get_Type())) {
+				throw -1;
+			}
+
+			const std::pair<State, msgs::MessageType> pair{_client->Get_State(), msg.Get_Type()};
 			const t_Handler handler = kHandlers.at(pair);
 			if (handler(*this, msg)) {
-				_state = kSuccess_Transitions.at({_state, msg.Get_Type()});
+				_client->Set_State(kSuccess_Transitions.at({_client->Get_State(), msg.Get_Type()}));
 			}
 		}
 	}
@@ -127,8 +137,8 @@ namespace game {
 
 		try {
 			Board board{};
-			//const std::map<size_t, size_t> cnts{{1, 4}, {2, 3}, {3, 2}, {4, 1}};
-			for (size_t i = 0; i < 10; ++i) {
+			//for (size_t i = 0; i < 20; ++i) { // TODO
+			for (size_t i = 0; i < 2; ++i) {
 				const std::string &field = msg.Get_Param(i);
 				const std::pair<size_t, size_t> field_pos = Board::Deserialize_Field(field);
 				board.Set_Ship(field_pos.first, field_pos.second);
@@ -151,14 +161,15 @@ namespace game {
 			return true;
 		}
 
-		const Client &opponent = room->Get_Opponent(*_client);
+		Client &opponent = room->Get_Opponent(*_client);
 		opponent.Send_Msg(msgs::Messages::Opponent_Board_Ready());
 
 		if (room->Is_Board_Ready(opponent)) {
 			_client->Send_Msg(msgs::Messages::Game_Begin());
 			opponent.Send_Msg(msgs::Messages::Game_Begin());
 
-			_state = State::kIn_Game;
+			_client->Set_State(State::kIn_Game);
+			opponent.Set_State(State::kIn_Game);
 
 			room->Set_Random_Client_On_Turn();
 
@@ -183,7 +194,7 @@ namespace game {
 		try {
 			const std::pair<size_t, size_t> field_pos = Board::Deserialize_Field(field);
 
-			const Client &opponent = room->Get_Opponent(*_client);
+			Client &opponent = room->Get_Opponent(*_client);
 			Board &board = room->Get_Board(opponent);
 			if (board.Is_Guess(field_pos.first, field_pos.second)) {
 				throw std::invalid_argument{""};
@@ -191,17 +202,22 @@ namespace game {
 
 			if (board.Turn(field_pos.first, field_pos.second)) {
 				_client->Send_Msg(msgs::Messages::Turn_Result(msgs::Messages::Turn_Res::kHit));
+
+				if (board.Is_All_Ships_Guessed()) {
+					_client->Send_Msg(msgs::Messages::Game_End(msgs::Messages::Client::kYou));
+					opponent.Send_Msg(msgs::Messages::Game_End(msgs::Messages::Client::kOpponent));
+
+					_client->Set_State(State::kIn_Room);
+					opponent.Set_State(State::kIn_Room);
+					return false; // TODO false a true
+				}
 			}
 			else {
 				_client->Send_Msg(msgs::Messages::Turn_Result(msgs::Messages::Turn_Res::kMiss));
-			}
-
-			if (board.Is_All_Ships_Guessed()) {
-				_client->Send_Msg(msgs::Messages::Game_End(msgs::Messages::Client::kYou));
-				opponent.Send_Msg(msgs::Messages::Game_End(msgs::Messages::Client::kOpponent));
-
-				_state = State::kIn_Room; // TODO menit stavy obou hracu
-				return false; // TODO false a true
+				room->Set_Opponent_On_Turn(*_client);
+				_client->Send_Msg(msgs::Messages::Turn_Set(msgs::Messages::Client::kOpponent));
+				opponent.Send_Msg(msgs::Messages::Turn_Set(msgs::Messages::Client::kYou));
+				return false;
 			}
 		}
 		catch (const std::invalid_argument &) {

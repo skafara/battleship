@@ -13,18 +13,9 @@ namespace game {
 	class StateMachine;
 	using t_Handler = std::function<bool (StateMachine &, const msgs::Message &)>;
 
-	enum class State {
-		kInit,
-		kIn_Lobby,
-		kIn_Room,
-		kIn_Game
-	};
-
 	class StateMachine {
 	public:
-		StateMachine(I_ServerOps &server, std::shared_ptr<Client> client);
-
-		void Run();
+		static void Run(I_ServerOps &server, std::shared_ptr<Client> client);
 
 	private:
 		static const std::map<State, std::set<msgs::MessageType>> kExpected_Msgs;
@@ -34,7 +25,8 @@ namespace game {
 		I_ServerOps &_server;
 		std::shared_ptr<Client> _client;
 
-		State _state;
+		StateMachine(I_ServerOps &server, std::shared_ptr<Client> client);
+		void Run();
 
 		bool Handle_Nickname_Set(const msgs::Message &msg);
 		bool Handle_Room_Create(const msgs::Message &msg);

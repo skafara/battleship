@@ -18,4 +18,6 @@ add_executable(bserver main.cpp
         game/StateMachine.cpp
         game/Room.cpp
         game/Board.cpp
+
+        util/Generator.cpp
 )

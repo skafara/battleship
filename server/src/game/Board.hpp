@@ -21,8 +21,10 @@ namespace game {
 		bool Is_All_Ships_Guessed() const;
 
 	private:
-		std::array<bool, 100> _ships;
-		std::array<bool, 100> _guesses;
+		static constexpr size_t kSize = 10;
+
+		std::array<bool, kSize * kSize> _ships;
+		std::array<bool, kSize * kSize> _guesses;
 
 		static size_t Get_Field_Idx(size_t row, size_t col);
 	};

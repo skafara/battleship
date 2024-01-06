@@ -77,7 +77,8 @@ namespace msgs {
 		{MessageType::kRoom_Create, 0},
 		{MessageType::kRoom_Join, 1},
 		{MessageType::kRoom_Leave, 0},
-		{MessageType::kBoard_Ready, 10},
+//		{MessageType::kBoard_Ready, 20},
+		{MessageType::kBoard_Ready, 2},
 		{MessageType::kTurn, 1}
 	};
 

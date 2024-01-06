@@ -1,10 +1,19 @@
 #include "Room.hpp"
+#include "../util/Generator.hpp"
 
 
 namespace game {
 
 	Room::Room(const std::string &code) : _code(code) {
 		//
+	}
+
+	std::string Room::Generate_Code() {
+		std::ostringstream osstream;
+		for (size_t i = 0; i < 4; ++i) {
+			osstream << (util::Generator::From_Range(0, 9));
+		}
+		return osstream.str();
 	}
 
 	const std::string &Room::Get_Code() const {
@@ -26,7 +35,7 @@ namespace game {
 		throw -1;
 	}
 
-	const Client &Room::Get_Opponent(const Client &client) {
+	Client &Room::Get_Opponent(const Client &client) {
 		return *(_clients[(Get_Client_Idx(client) + 1) % 2]);
 	}
 
@@ -47,14 +56,14 @@ namespace game {
 	}*/
 
 	void Room::Set_Random_Client_On_Turn() {
-		_client_on_turn_idx = 0;
+		_client_on_turn_idx = util::Generator::From_Range(0, 1);
 	}
 
 	void Room::Set_Opponent_On_Turn(const Client &client) {
 		_client_on_turn_idx = Get_Client_Idx(Get_Opponent(client));
 	}
 
-	const Client &Room::Get_Client_On_Turn() const {
+	Client &Room::Get_Client_On_Turn() const {
 		return *(_clients[_client_on_turn_idx]);
 	}
 

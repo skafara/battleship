@@ -7,7 +7,8 @@ namespace msgs {
 		return {MessageType::kWelcome,
 			"bserver - Battleship server",
 			"Seminar Work of KIV/UPS, 2024",
-			"Stanislav Kafara, skafara@students.zcu.cz"
+			"Stanislav Kafara, skafara@students.zcu.cz",
+			"University of West Bohemia, Pilsen"
 		};
 	}
 
@@ -72,7 +73,7 @@ namespace msgs {
 	}
 
 	Message Messages::Turn_Result(Messages::Turn_Res res) {
-		return {MessageType::kTurn_Result};
+		return {MessageType::kTurn_Result, Get_Turn_Res_Description(res)};
 	}
 
 	Message Messages::Turn_Not_You() {

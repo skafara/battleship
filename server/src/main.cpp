@@ -7,6 +7,7 @@ void Print_Info() {
 	std::cout << "| bserver - Battleship Server" << std::endl;
 	std::cout << "| Seminar Work of KIV/UPS, 2024" << std::endl;
 	std::cout << "| Stanislav Kafara, skafara@students.zcu.cz" << std::endl;
+	std::cout << "| University of West Bohemia, Pilsen" << std::endl;
 }
 
 void Print_Help() {

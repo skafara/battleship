@@ -10,6 +10,8 @@ namespace game {
 
 class I_ServerOps {
 public:
+	virtual std::mutex &Get_Mutex() const = 0;
+
 	virtual size_t Get_Lim_Rooms() const = 0;
 	virtual bool Is_Exceeded_Lim_Rooms() const = 0;
 	virtual const std::string &Create_Room() = 0;

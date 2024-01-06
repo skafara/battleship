@@ -12,6 +12,18 @@ namespace game {
 		return lhs._nickname == rhs._nickname;
 	}
 
+	/*std::mutex &Client::Get_Mutex_State() const {
+		return _mutex_state;
+	}*/
+
+	State Client::Get_State() const {
+		return _state;
+	}
+
+	void Client::Set_State(State state) {
+		_state = state;
+	}
+
 	const std::string &Client::Get_Nickname() const {
 		return _nickname;
 	}
@@ -32,23 +44,23 @@ namespace game {
 		return _msgc.Recv();
 	}
 
-	msgs::Message Client::Await_Msg(const std::set<msgs::MessageType> &expected) const {
+	msgs::Message Client::Await_Msg() const {
 		for (;;) {
 			const msgs::Message msg = Recv_Msg();
 
 			if (msg.Get_Type() == msgs::MessageType::kPong) {
 				continue;
 			}
-			if (!expected.contains(msg.Get_Type())) {
-				throw -1;
-			}
+			//if (!expected.contains(msg.Get_Type())) {
+			//	throw -1;
+			//}
 
 			return msg;
 		}
 	}
 
-	void Client::Await_Ack() const {
+	/*void Client::Await_Ack() const {
 		Await_Msg({msgs::MessageType::kAck});
-	}
+	}*/
 
 } // game

@@ -3,6 +3,7 @@
 #include "msgs/Communicator.hpp"
 #include "msgs/Messages.hpp"
 #include "game/StateMachine.hpp"
+#include "game/Room.hpp"
 
 #include <thread>
 
@@ -11,10 +12,36 @@ Server::Server(const std::string &addr, uint16_t port, size_t lim_clients, size_
 		_lim_clients(lim_clients), _lim_rooms(lim_rooms), _sock_acceptor(addr, port) {
 	//
 }
-
+#include "iostream"
 void Server::Serve() {
 	for (;;) {
+		/*std::vector<std::string> board = {
+				"..XX...XXX",
+				"X.........",
+				"X.....X..X",
+				"X.....X...",
+				"X.........",
+				".....X...X",
+				"..........",
+				"X.....X..X",
+				"X.....X...",
+				"......X..."
+		};
+		game::Board b{};
+		for (int row = 0; row < 10; ++row) {
+			for (int col = 0; col < 10; ++col) {
+				if (board[row][col] == 'X') {
+					b.Set_Ship(row, col);
+				}
+			}
+		}
+
+		std::cout << b.Is_Valid() << std::endl;*/
+
 		std::unique_ptr<ntwrk::Socket> sock = Accept_Connection();
+
+		std::lock_guard lck{Get_Mutex()};
+
 		msgs::Communicator::Send(*sock, msgs::Messages::Welcome());
 
 		if (_clients.size() >= _lim_clients) {
@@ -43,11 +70,13 @@ void Server::Refuse_Connection(std::unique_ptr<ntwrk::Socket> sock) const {
 #include "game/Board.hpp"
 #include "iostream"
 void Server::Serve_Client(std::shared_ptr<game::Client> client) {
+	game::StateMachine::Run(*this, client);
+
 	//client->Send_Msg(msgs::Messages::Nickname_Prompt());
 	//client->Await_Ack();
 
-	game::StateMachine state_machine{*this, client};
-	state_machine.Run();
+	//game::StateMachine state_machine{*this, client};
+	//state_machine.Run();
 
 	/*client->Await_Msg({msgs::MessageType::kNickname_Set});
 	client->Send_Msg(msgs::Messages::Ack());
@@ -82,10 +111,16 @@ bool Server::Is_Exceeded_Lim_Rooms() const {
 }
 
 const std::string &Server::Create_Room() {
-	const std::string code = "abcd"; // TODO gen until !exists
-	std::shared_ptr<game::Room> room = std::make_shared<game::Room>(code);
-	_rooms.push_back(room);
-	return room->Get_Code();
+	for (;;) {
+		const std::string code = game::Room::Generate_Code();
+		if (Exists_Room(code)) {
+			continue;
+		}
+
+		std::shared_ptr<game::Room> room = std::make_shared<game::Room>(code);
+		_rooms.push_back(room);
+		return room->Get_Code();
+	}
 }
 
 bool Server::Exists_Room(const std::string &code) const {
@@ -99,7 +134,7 @@ std::shared_ptr<game::Room> Server::Get_Room(const std::string &code) const {
 }
 
 std::shared_ptr<game::Room> Server::Get_Room(const std::shared_ptr<game::Client> client) const {
-	return _rooms[0];
+	return _rooms[0]; // TODO
 }
 
 bool Server::Is_Nickname_Active(const std::string &nickname) const {
@@ -117,4 +152,8 @@ void Server::Disconnect_Client(const std::shared_ptr<game::Client> client, game:
 
 void Server::Reconnect_Client(std::shared_ptr<game::Client> client) const {
 
+}
+
+std::mutex &Server::Get_Mutex() const {
+	return _mutex;
 }
