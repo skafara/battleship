@@ -14,6 +14,7 @@ namespace game {
 		static std::string Generate_Code();
 		const std::string &Get_Code() const;
 
+		const std::array<std::shared_ptr<Client>, 2> &Get_Clients() const;
 		bool Is_Full();
 		void Join(const std::shared_ptr<Client> client);
 

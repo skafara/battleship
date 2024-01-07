@@ -4,9 +4,26 @@
 
 namespace game {
 
-	Client::Client(std::unique_ptr<ntwrk::Socket> sock) : _sock(std::move(sock)), _msgc(*_sock) {
+	Client::Client(std::unique_ptr<ntwrk::Socket> sock) : _sock(std::move(sock)) {
 		//
 	}
+
+	/*Client::Client(Client &&other) noexcept :
+		_sock(std::move(other._sock)),
+		_nickname(std::move(other._nickname)),
+		_state(other._state),
+		_last_active(other._last_active) {
+		//
+	}
+
+	Client &Client::operator=(Client &&other) noexcept {
+		_sock = std::move(other._sock);
+		_nickname = std::move(other._nickname);
+		_state = other._state;
+		_last_active = other._last_active;
+
+		return *this;
+	}*/
 
 	bool operator==(const Client &lhs, const Client &rhs) {
 		return lhs._nickname == rhs._nickname;
@@ -24,6 +41,14 @@ namespace game {
 		_state = state;
 	}
 
+	const std::chrono::time_point<std::chrono::steady_clock> &Client::Get_Last_Active() const {
+		return _last_active;
+	}
+
+	void Client::Set_Last_Active(const std::chrono::time_point<std::chrono::steady_clock> &time_point) {
+		_last_active = time_point;
+	}
+
 	const std::string &Client::Get_Nickname() const {
 		return _nickname;
 	}
@@ -33,7 +58,7 @@ namespace game {
 	}
 
 	void Client::Send_Msg(const msgs::Message &msg) const {
-		_msgc.Send(msg);
+		msgs::Communicator::Send(*_sock, msg);
 	}
 
 	void Client::Send_Ack() const {
@@ -41,22 +66,19 @@ namespace game {
 	}
 
 	msgs::Message Client::Recv_Msg() const {
-		return _msgc.Recv();
+		return msgs::Communicator::Recv(*_sock);;
 	}
 
-	msgs::Message Client::Await_Msg() const {
-		for (;;) {
-			const msgs::Message msg = Recv_Msg();
+	std::unique_ptr<ntwrk::Socket> Client::Give_Up_Socket() {
+		return std::move(_sock);
+	}
 
-			if (msg.Get_Type() == msgs::MessageType::kPong) {
-				continue;
-			}
-			//if (!expected.contains(msg.Get_Type())) {
-			//	throw -1;
-			//}
+	void Client::Replace_Socket(std::unique_ptr<ntwrk::Socket> sock) {
+		_sock = std::move(sock);
+	}
 
-			return msg;
-		}
+	void Client::Close_Socket() {
+		_sock = nullptr;
 	}
 
 	/*void Client::Await_Ack() const {

@@ -22,11 +22,15 @@ namespace game {
 		static const std::map<std::pair<State, msgs::MessageType>, State> kSuccess_Transitions;
 		static const std::map<std::pair<State, msgs::MessageType>, t_Handler> kHandlers;
 
+		static constexpr std::chrono::seconds Timeout_Short{30};
+
 		I_ServerOps &_server;
 		std::shared_ptr<Client> _client;
 
 		StateMachine(I_ServerOps &server, std::shared_ptr<Client> client);
 		void Run();
+
+		msgs::Message Await_Msg() const;
 
 		bool Handle_Nickname_Set(const msgs::Message &msg);
 		bool Handle_Room_Create(const msgs::Message &msg);

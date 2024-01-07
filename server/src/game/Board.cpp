@@ -74,11 +74,15 @@ namespace game {
 		return _guesses[Get_Field_Idx(row, col)];
 	}
 
+	bool Board::Is_Ship(size_t row, size_t col) const {
+		return _ships[Get_Field_Idx(row, col)];
+	}
+
 	bool Board::Turn(size_t row, size_t col) {
 		const size_t field_idx = Get_Field_Idx(row, col);
 		const bool is_ship = _ships[field_idx];
 
-		_guesses[Get_Field_Idx(row, col)] = true;
+		_guesses[field_idx] = true;
 		return is_ship;
 	}
 

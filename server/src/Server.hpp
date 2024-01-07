@@ -25,26 +25,32 @@ public:
 	std::shared_ptr<game::Room> Get_Room(const std::string &code) const override;
 	std::shared_ptr<game::Room> Get_Room(const std::shared_ptr<game::Client> client) const override; // lock
 
+	void Destroy_Room(const std::shared_ptr<game::Room> room) override;
+
 	bool Is_Nickname_Active(const std::string &nickname) const override;
 	bool Is_Nickname_Disconnected(const std::string &nickname) const override;
 
-	void Disconnect_Client(const std::shared_ptr<game::Client> client, game::State state) override;
-	void Reconnect_Client(std::shared_ptr<game::Client> client) const override;
+	void Disconnect_Client(const std::shared_ptr<game::Client> client) override;
+	void Reconnect_Client(std::shared_ptr<game::Client> &client) override;
 
 private:
+	static constexpr std::chrono::seconds Timeout_Long{6000};
+
 	const size_t _lim_clients;
 	const size_t _lim_rooms;
 
 	ntwrk::SocketAcceptor _sock_acceptor;
 
 	std::vector<std::shared_ptr<game::Client>> _clients;
-	std::map<std::string, std::pair<game::State, std::shared_ptr<game::Room>>> _disconnected;
+	std::vector<std::shared_ptr<game::Client>> _disconnected;
 	std::vector<std::shared_ptr<game::Room>> _rooms;
 
 	mutable std::mutex _mutex;
 
 	std::unique_ptr<ntwrk::Socket> Accept_Connection() const;
 	void Refuse_Connection(std::unique_ptr<ntwrk::Socket> sock) const;
+
+	void Clients_Terminator();
 
 	void Serve_Client(std::shared_ptr<game::Client> client);
 	void Terminate_Client(std::shared_ptr<game::Client> client);

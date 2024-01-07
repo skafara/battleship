@@ -20,6 +20,10 @@ namespace game {
 		return _code;
 	}
 
+	const std::array<std::shared_ptr<Client>, 2> &Room::Get_Clients() const {
+		return _clients;
+	}
+
 	bool Room::Is_Full() {
 		return !std::ranges::any_of(_clients, [](const std::shared_ptr<Client> &client) {return client == nullptr;});
 	}

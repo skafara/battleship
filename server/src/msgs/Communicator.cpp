@@ -6,7 +6,7 @@
 
 namespace msgs {
 
-	Communicator::Communicator(const ntwrk::Socket &sock) : _sock(sock) {
+	/*Communicator::Communicator(const ntwrk::Socket &sock) : _sock(sock) {
 		//
 	}
 
@@ -16,7 +16,7 @@ namespace msgs {
 
 	Message Communicator::Recv() const {
 		return Recv(_sock);
-	}
+	}*/
 
 	void Communicator::Send(const ntwrk::Socket &sock, const Message &msg) {
 		const std::string text = msg.Serialize();

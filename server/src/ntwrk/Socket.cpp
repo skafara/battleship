@@ -39,9 +39,10 @@ namespace ntwrk {
 	}
 
 	void Socket::Write_Byte(std::byte byte) const {
-		if (write(_fd, &byte, 1) != 1) {
+		/*if (write(_fd, &byte, 1) != 1) {
 			throw -1;
-		}
+		}*/
+		write(_fd, &byte, 1);
 	}
 
 } // ntwrk

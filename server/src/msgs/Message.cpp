@@ -59,7 +59,7 @@ namespace msgs {
 		std::ostringstream param_osstream;
 		for (size_t i = type_str.length() + 1; ; ++i) {
 			if (i >= str.length()) {
-				msg._params.push_back(param_osstream.str());
+				msg.Store_Param(param_osstream.str());
 				break;
 			}
 
@@ -71,7 +71,7 @@ namespace msgs {
 				}
 
 				if (c == '|') {
-					msg._params.push_back(param_osstream.str());
+					msg.Store_Param(param_osstream.str());
 					param_osstream = std::ostringstream{};
 					continue;
 				}

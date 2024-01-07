@@ -20,9 +20,11 @@ public:
 	virtual std::shared_ptr<game::Room> Get_Room(const std::string &code) const = 0;
 	virtual std::shared_ptr<game::Room> Get_Room(const std::shared_ptr<game::Client> client) const = 0;
 
+	virtual void Destroy_Room(const std::shared_ptr<game::Room> room) = 0;
+
 	virtual bool Is_Nickname_Active(const std::string &nickname) const = 0;
 	virtual bool Is_Nickname_Disconnected(const std::string &nickname) const = 0;
 
-	virtual void Disconnect_Client(const std::shared_ptr<game::Client> client, game::State state) = 0;
-	virtual void Reconnect_Client(std::shared_ptr<game::Client> client) const = 0;
+	virtual void Disconnect_Client(const std::shared_ptr<game::Client> client) = 0;
+	virtual void Reconnect_Client(std::shared_ptr<game::Client> &client) = 0;
 };

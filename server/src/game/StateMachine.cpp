@@ -2,8 +2,9 @@
 
 #include "../msgs/Messages.hpp"
 
-
+#include "thread"
 #include "iostream"
+#include <future>
 namespace game {
 
 	const std::map<State, std::set<msgs::MessageType>> StateMachine::kExpected_Msgs{
@@ -44,19 +45,60 @@ namespace game {
 
 	void StateMachine::Run() {
 		for (;;) {
-			const msgs::Message msg = _client->Await_Msg();
+			try {
+				const msgs::Message msg = Await_Msg();
 
-			std::lock_guard lck{_server.Get_Mutex()};
+				std::lock_guard lck{_server.Get_Mutex()};
 
-			if (!kExpected_Msgs.at(_client->Get_State()).contains(msg.Get_Type())) {
+				if (!kExpected_Msgs.at(_client->Get_State()).contains(msg.Get_Type())) {
+					throw -1;
+				}
+
+				const std::pair<State, msgs::MessageType> pair{_client->Get_State(), msg.Get_Type()};
+				const t_Handler handler = kHandlers.at(pair);
+				if (handler(*this, msg)) {
+					_client->Set_State(kSuccess_Transitions.at({_client->Get_State(), msg.Get_Type()}));
+				}
+			}
+			catch (int i) {
+				std::lock_guard lck{_server.Get_Mutex()};
+
+				_server.Disconnect_Client(_client);
+				return;
+			}
+		}
+	}
+
+	msgs::Message StateMachine::Await_Msg() const {
+		for (;;) {
+			std::promise<msgs::Message> promise;
+			std::future<msgs::Message> future = promise.get_future();
+
+			bool msg_received = false;
+			std::thread th{[this, &promise, &msg_received]() {
+				const msgs::Message msg = _client->Recv_Msg();
+				msg_received = true;
+				promise.set_value(msg);
+			}};
+
+			future.wait_until(_client->Get_Last_Active() + Timeout_Short);
+			if (!msg_received) {
+				// ! Linux specific ! //
+				const pthread_t handle = th.native_handle();
+				pthread_cancel(handle);
+
+				th.join();
 				throw -1;
 			}
 
-			const std::pair<State, msgs::MessageType> pair{_client->Get_State(), msg.Get_Type()};
-			const t_Handler handler = kHandlers.at(pair);
-			if (handler(*this, msg)) {
-				_client->Set_State(kSuccess_Transitions.at({_client->Get_State(), msg.Get_Type()}));
+			th.join();
+			_client->Set_Last_Active(std::chrono::steady_clock::now());
+			const msgs::Message msg = future.get();
+			if (msg.Get_Type() == msgs::MessageType::kKeep_Alive) {
+				continue;
 			}
+
+			return msg;
 		}
 	}
 
@@ -69,7 +111,8 @@ namespace game {
 		}
 
 		if (_server.Is_Nickname_Disconnected(nickname)) {
-			_client->Send_Msg(msgs::Messages::Welcome()); // TODO rejoin
+			_client->Set_Nickname(nickname);
+			_server.Reconnect_Client(_client);
 			return false;
 		}
 
@@ -94,11 +137,6 @@ namespace game {
 
 	bool StateMachine::Handle_Room_Join(const msgs::Message &msg) {
 		const std::string &code = msg.Get_Param(0);
-
-		//{
-			/*std::lock(_client->Get_Mutex_Sock(), opponent.Get_Mutex_Sock());
-			std::lock_guard<std::mutex> lck_client_sock{_client->Get_Mutex_Sock(), std::adopt_lock};
-			std::lock_guard<std::mutex> lck_opponent_sock{opponent.Get_Mutex_Sock(), std::adopt_lock};*/
 
 		if (!_server.Exists_Room(code)) {
 			_client->Send_Msg(msgs::Messages::Room_Not_Exists());
@@ -126,7 +164,21 @@ namespace game {
 	}
 
 	bool StateMachine::Handle_Room_Leave(const msgs::Message &msg) {
-		return true;
+		const std::shared_ptr<Room> room = _server.Get_Room(_client);
+
+		_client->Send_Msg(msgs::Messages::Ack());
+		_client->Set_State(State::kIn_Lobby);
+
+		if (room->Is_Full()) {
+			Client &opponent = room->Get_Opponent(*_client);
+
+			opponent.Send_Msg(msgs::Messages::Opponent_Room_Leave());
+			opponent.Set_State(State::kIn_Lobby);
+		}
+
+		_server.Destroy_Room(room);
+
+		return false;
 	}
 
 	bool StateMachine::Handle_Board_Ready(const msgs::Message &msg) {
@@ -201,7 +253,8 @@ namespace game {
 			}
 
 			if (board.Turn(field_pos.first, field_pos.second)) {
-				_client->Send_Msg(msgs::Messages::Turn_Result(msgs::Messages::Turn_Res::kHit));
+				_client->Send_Msg(msgs::Messages::Turn_Result(field_pos.first, field_pos.second, msgs::Messages::Turn_Res::kHit));
+				opponent.Send_Msg(msgs::Messages::Opponent_Turn(field_pos.first, field_pos.second, msgs::Messages::Turn_Res::kHit));
 
 				if (board.Is_All_Ships_Guessed()) {
 					_client->Send_Msg(msgs::Messages::Game_End(msgs::Messages::Client::kYou));
@@ -213,7 +266,9 @@ namespace game {
 				}
 			}
 			else {
-				_client->Send_Msg(msgs::Messages::Turn_Result(msgs::Messages::Turn_Res::kMiss));
+				_client->Send_Msg(msgs::Messages::Turn_Result(field_pos.first, field_pos.second, msgs::Messages::Turn_Res::kMiss));
+				opponent.Send_Msg(msgs::Messages::Opponent_Turn(field_pos.first, field_pos.second, msgs::Messages::Turn_Res::kMiss));
+
 				room->Set_Opponent_On_Turn(*_client);
 				_client->Send_Msg(msgs::Messages::Turn_Set(msgs::Messages::Client::kOpponent));
 				opponent.Send_Msg(msgs::Messages::Turn_Set(msgs::Messages::Client::kYou));
