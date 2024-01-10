@@ -21,3 +21,4 @@ add_executable(bserver main.cpp
 
         util/Generator.cpp
 )
+target_link_libraries(bserver pthread)
