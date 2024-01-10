@@ -6,6 +6,7 @@
 #include "game/Room.hpp"
 
 #include <thread>
+#include <algorithm>
 
 
 Server::Server(const std::string &addr, uint16_t port, size_t lim_clients, size_t lim_rooms) :
