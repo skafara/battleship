@@ -2,6 +2,7 @@
 
 #include <regex>
 #include <limits>
+#include <array>
 
 
 CliArgsParser::Result::Result(const std::string &ip, uint16_t port, size_t lim_clients, size_t lim_rooms)

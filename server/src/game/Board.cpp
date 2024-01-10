@@ -3,6 +3,7 @@
 #include <sstream>
 #include <map>
 
+
 namespace game {
 
 	void Board::Set_Ship(size_t row, size_t col) {
