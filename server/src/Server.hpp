@@ -2,6 +2,7 @@
 
 #include <string>
 #include <map>
+#include <mutex>
 
 #include "ntwrk/SocketAcceptor.hpp"
 #include "game/Client.hpp"
