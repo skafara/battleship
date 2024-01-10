@@ -51,7 +51,7 @@ public class Controller {
                     socket = new Socket();
                     socket.connect(new InetSocketAddress(address, port_), SOCKET_CONNECTION_TIMEOUT_MS);
                     communicator = new Communicator(socket);
-                    stateMachine = new StateMachine();
+                    stateMachine = new StateMachine(new StateMachineController(model, stageManager));
                     messagesManager = new MessagesManager(communicator, stateMachine);
 
                     new Thread(new KeepAlive(communicator)).start();
@@ -123,7 +123,7 @@ public class Controller {
         new Thread(() -> {
             CompletableFuture<Message> responseFuture = expectMessage(Message.Type.ACK, Message.Type.ROOM_FULL, Message.Type.ROOM_NOT_EXISTS);
             try {
-                sendMessage(new Message(Message.Type.ROOM_JOIN));
+                sendMessage(new Message(Message.Type.ROOM_JOIN, code));
                 Message response = responseFuture.get();
 
                 if (response.getType() == Message.Type.ACK) {
@@ -155,7 +155,7 @@ public class Controller {
                 responseFuture.get();
 
                 model.applicationState.roomCodeProperty().set("");
-                model.clientState.getBoard().reset();
+                model.clientState.resetExceptNickname();
                 model.opponentState.reset();
                 future.complete(null);
             } catch (IOException e) {
@@ -170,7 +170,6 @@ public class Controller {
 
     public CompletableFuture<Void> boardReady(BoardState boardState) {
         CompletableFuture<Void> future = new CompletableFuture<>();
-
         if (!boardState.isValid()) {
             future.completeExceptionally(new IllegalArgumentException());
             return future;
@@ -200,8 +199,44 @@ public class Controller {
         return future;
     }
 
-    public void turn(int row, int col) {
+    public CompletableFuture<Void> turn(int row, int col) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        BoardState boardState = model.opponentState.getBoard();
+        if (boardState.isGuess(row, col)) {
+            future.completeExceptionally(new IllegalArgumentException());
+            return future;
+        }
 
+        new Thread(() -> {
+            CompletableFuture<Message> responseFuture = expectMessage(Message.Type.TURN_RESULT, Message.Type.TURN_ILLEGAL, Message.Type.TURN_NOT_YOU);
+            try {
+                sendMessage(new Message(Message.Type.TURN, BoardState.SerializeField(row, col)));
+                Message response = responseFuture.get();
+
+                if (response.getType() == Message.Type.TURN_RESULT) {
+                    if (response.getParameter(1).equals("HIT")) {
+                        model.opponentState.getBoard().setField(BoardState.Field.Hit, row, col);
+                    }
+                    else {
+                        model.opponentState.getBoard().setField(BoardState.Field.Miss, row, col);
+                    }
+                    future.complete(null);
+                }
+                else if (response.getType() == Message.Type.TURN_ILLEGAL) {
+                    future.completeExceptionally(new IllegalArgumentException());
+                }
+                else {
+                    future.completeExceptionally(new IllegalStateException());
+                }
+            } catch (IOException e) {
+                future.completeExceptionally(e);
+            } catch (ExecutionException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+        }).start();
+
+        return future;
     }
 
     public void sendMessage(Message message) throws IOException {
@@ -217,7 +252,7 @@ public class Controller {
         for (int row = 0; row < BoardState.SIZE; row++) {
             for (int col = 0; col < BoardState.SIZE; col++) {
                 if (boardState.isShip(row, col)) {
-                    positions.add(String.format("%d%d", row, col));
+                    positions.add(BoardState.SerializeField(row, col));
                 }
             }
         }

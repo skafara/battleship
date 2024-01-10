@@ -1,12 +1,16 @@
 package battleship.client.views;
 
 import battleship.client.controllers.Controller;
+import battleship.client.models.ApplicationState;
 import battleship.client.models.BoardState;
 import battleship.client.models.ClientState;
+import battleship.client.views.components.RoomFactory;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.control.Alert;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
@@ -15,6 +19,8 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
+
+import java.util.concurrent.CompletableFuture;
 
 public class Board extends GridPane {
 
@@ -53,18 +59,20 @@ public class Board extends GridPane {
         setAlignment(Pos.CENTER);
         setMaxSize((BOARD_SIZE + 1) * CELL_SIZE, (BOARD_SIZE + 1) * CELL_SIZE);
 
-        disableProperty().bind(Bindings.createBooleanBinding(() -> {
-            if (client) {
-                return clientState.isBoardReadyProperty().get();
-            }
-            else return !clientState.isBoardReadyProperty().get() || clientState.isOnTurnProperty().get();
-        }, clientState.isOnTurnProperty()));
+        if (client) {
+            disableProperty().bind(clientState.isOnTurnProperty());
+        }
+        else {
+            disableProperty().bind(Bindings.createBooleanBinding(() -> {
+                    return !clientState.isBoardReadyProperty().get() || clientState.isOnTurnProperty().get();
+            }, clientState.isBoardReadyProperty(), clientState.isOnTurnProperty()));
+        }
 
         clientState.getBoard().getBoard().addListener((ListChangeListener<BoardState.Field>) change -> {
             repaint(clientState.getBoard());
         });
 
-        setOnMouseClicked(e -> handleClick(e, clientState, controller, client));
+        setOnMouseClicked(e -> handleClick(e, clientState.getBoard(), controller, client));
     }
 
     private static StackPane createCell() {
@@ -120,7 +128,7 @@ public class Board extends GridPane {
         }
     }
 
-    private void handleClick(MouseEvent mouseEvent, ClientState clientState, Controller controller, boolean client) {
+    private void handleClick(MouseEvent mouseEvent, BoardState boardState, Controller controller, boolean client) {
         int row = (int) (mouseEvent.getY() / (CELL_SIZE + STROKE_WIDTH) - 1);
         int col = (int) (mouseEvent.getX() / (CELL_SIZE + STROKE_WIDTH) - 1);
 
@@ -129,10 +137,49 @@ public class Board extends GridPane {
         }
 
         if (client) {
-            clientState.getBoard().setField(BoardState.Field.Ship, row, col);
+            if (!boardState.isShip(row, col)) {
+                boardState.setField(BoardState.Field.Ship, row, col);
+            } else {
+                boardState.setField(BoardState.Field.None, row, col);
+            }
         } else {
-            clientState.getBoard().setField(BoardState.Field.Hit, row, col);
+            handleTurn(row, col, controller);
         }
+    }
+
+    private void handleTurn(int row, int col, Controller controller) {
+        //ApplicationState applicationState = model.applicationState;
+        //applicationState.buttonReadyDisableProperty().set(true);
+
+        CompletableFuture<Void> future = controller.turn(row, col);
+
+        future.whenCompleteAsync((value, exception) -> {
+            if (exception == null) {
+                //applicationState.buttonReadyDisableProperty().set(false);
+                //Platform.runLater(() -> controller.getStageManager().setScene(StageManager.Scene.Room));
+                return;
+            }
+
+            switch (exception) {
+                case IllegalArgumentException e -> Platform.runLater(Board::handleIllegalTurn);
+                /*case IOException e -> {
+                    Platform.runLater(() -> handleIO(e));
+                }*/
+                default -> {
+                    //
+                }
+            }
+
+            //applicationState.buttonReadyDisableProperty().set(false);
+        });
+    }
+
+    private static void handleIllegalTurn() {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText("Invalid Turn");
+        alert.setContentText("Check the validity of your turn.");
+        alert.showAndWait();
     }
 
 }

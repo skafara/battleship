@@ -22,7 +22,10 @@ public class MenuBar extends javafx.scene.control.MenuBar {
 
         MenuItem itemQuit = new MenuItem("Quit");
         itemQuit.setAccelerator(KeyCombination.keyCombination("Ctrl+Q"));
-        itemQuit.setOnAction((e) -> Platform.exit());
+        itemQuit.setOnAction((e) -> {
+            Platform.exit();
+            System.exit(0);
+        });
         menu.getItems().add(itemQuit);
 
         return menu;

@@ -58,6 +58,9 @@ namespace game {
 	}
 
 	void Client::Send_Msg(const msgs::Message &msg) const {
+		if (!_sock) {
+			return;
+		}
 		msgs::Communicator::Send(*_sock, msg);
 	}
 
@@ -66,7 +69,10 @@ namespace game {
 	}
 
 	msgs::Message Client::Recv_Msg() const {
-		return msgs::Communicator::Recv(*_sock);;
+		if (!_sock) {
+			throw -1;
+		}
+		return msgs::Communicator::Recv(*_sock);
 	}
 
 	std::unique_ptr<ntwrk::Socket> Client::Give_Up_Socket() {

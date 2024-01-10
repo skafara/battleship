@@ -9,6 +9,7 @@ public class Message {
 
     public enum Type {
         WELCOME,
+        CONN_TERM,
         KEEP_ALIVE,
         ACK,
         LIMIT_CLIENTS,
@@ -21,18 +22,31 @@ public class Message {
         ROOM_NOT_EXISTS,
         ROOM_LEAVE,
         BOARD_READY,
-        BOARD_ILLEGAL
+        BOARD_ILLEGAL,
+        OPPONENT_NICKNAME_SET,
+        OPPONENT_BOARD_READY,
+        OPPONENT_ROOM_LEAVE,
+        GAME_BEGIN,
+        TURN_SET,
+        TURN_RESULT, TURN_ILLEGAL, TURN_NOT_YOU, TURN, OPPONENT_NO_RESPONSE
     }
 
-    private static final Map<Type, Integer> PARAMETERS_COUNTS = Map.of(
-            Type.WELCOME, 4,
-            Type.LIMIT_CLIENTS, 1,
-            Type.ACK, 0,
-            Type.ROOM_CREATED, 1,
-            Type.LIMIT_ROOMS, 1,
-            Type.ROOM_FULL, 0,
-            Type.ROOM_NOT_EXISTS, 0,
-            Type.BOARD_ILLEGAL, 0
+    private static final Map<Type, Integer> PARAMETERS_COUNTS = Map.ofEntries(
+            Map.entry(Type.WELCOME, 4),
+            Map.entry(Type.CONN_TERM, 0),
+            Map.entry(Type.LIMIT_CLIENTS, 1),
+            Map.entry(Type.ACK, 0),
+            Map.entry(Type.ROOM_CREATED, 1),
+            Map.entry(Type.LIMIT_ROOMS, 1),
+            Map.entry(Type.ROOM_FULL, 0),
+            Map.entry(Type.ROOM_NOT_EXISTS, 0),
+            Map.entry(Type.BOARD_ILLEGAL, 0),
+            Map.entry(Type.OPPONENT_NICKNAME_SET, 1),
+            Map.entry(Type.OPPONENT_BOARD_READY, 0),
+            Map.entry(Type.OPPONENT_ROOM_LEAVE, 0),
+            Map.entry(Type.GAME_BEGIN, 1),
+            Map.entry(Type.TURN_SET, 1),
+            Map.entry(Type.OPPONENT_NO_RESPONSE, 1)
     );
 
     private final Type type;

@@ -55,7 +55,7 @@ namespace msgs {
 			if (msg._params.size() != kMessageType_Params_Cnt.at(msg.Get_Type())) {
 				throw -1;
 			}
-			
+
 			return msg;
 		}
 

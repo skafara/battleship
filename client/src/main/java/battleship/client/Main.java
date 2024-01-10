@@ -2,6 +2,7 @@ package battleship.client;
 
 import battleship.client.views.StageManager;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.stage.Stage;
 
 public class Main extends Application {
@@ -17,14 +18,14 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) {
+        stage.setOnCloseRequest((e) -> {
+            Platform.exit();
+            System.exit(0);
+        });
+
         stageManager.setStage(stage);
         stageManager.setScene(StageManager.Scene.Index);
         stageManager.showStage();
-    }
-
-    @Override
-    public void stop() throws Exception {
-        super.stop();
     }
 
     public static void main(String[] args) {

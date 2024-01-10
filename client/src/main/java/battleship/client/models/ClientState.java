@@ -43,9 +43,14 @@ public class ClientState {
 
     public void reset() {
         nickname.set("");
+        resetExceptNickname();
+    }
+
+    public void resetExceptNickname() {
         boardState.reset();
         isBoardReady.set(false);
         isOnTurn.set(false);
         isResponding.set(true);
     }
+
 }

@@ -10,6 +10,7 @@ import battleship.client.views.StageManager;
 import battleship.client.views.components.forms.FormFactory;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
@@ -61,15 +62,19 @@ public class RoomFactory {
         hBox.setSpacing(BOARDS_SPACING);
         hBox.setAlignment(Pos.CENTER);
 
+        BooleanBinding isInGameBinding = Bindings.createBooleanBinding(() -> {
+            return model.clientState.isBoardReadyProperty().get() && model.opponentState.isBoardReadyProperty().get();
+        }, model.clientState.isBoardReadyProperty(), model.opponentState.isBoardReadyProperty());
+
         hBox.getChildren().addAll(
-                getBoardSide(model.clientState, controller, true),
-                getBoardSide(model.opponentState, controller, false)
+                getBoardSide(model.clientState, controller, true, isInGameBinding),
+                getBoardSide(model.opponentState, controller, false, isInGameBinding)
         );
 
         return hBox;
     }
 
-    private static VBox getBoardSide(ClientState clientState, Controller controller, boolean isClient) {
+    private static VBox getBoardSide(ClientState clientState, Controller controller, boolean isClient, BooleanBinding isInGame) {
         VBox vBox = new VBox();
         vBox.setSpacing(SPACING);
         vBox.setAlignment(Pos.CENTER);
@@ -82,14 +87,14 @@ public class RoomFactory {
             textNickname.textProperty().bind(
                     Bindings.createStringBinding(
                             () -> {
-                                if (clientState.nicknameProperty().get().isEmpty()) {
+                                if (!clientState.isInRoomBinding().get()) {
                                     return "...";
                                 }
                                 else {
                                     return clientState.nicknameProperty().get();
                                 }
                             },
-                            clientState.nicknameProperty()
+                            clientState.isInRoomBinding()
                     )
             );
         }
@@ -100,14 +105,28 @@ public class RoomFactory {
         textDescription.textProperty().bind(
                 Bindings.createStringBinding(
                         () -> {
-                            if (clientState.isBoardReadyProperty().get()) {
-                                return "Ready";
+                            if (!isInGame.get()) {
+                                if (clientState.isBoardReadyProperty().get()) {
+                                    return "Ready";
+                                } else if (clientState.isInRoomBinding().get()) {
+                                    return "Not Ready";
+                                }
                             }
                             else {
-                                return "Not Ready";
+                                if (isClient) {
+                                    if (clientState.isOnTurnProperty().get()) {
+                                        return "Your Turn";
+                                    }
+                                }
+                                else {
+                                    if (clientState.isOnTurnProperty().get()) {
+                                        return "Opponent's Turn";
+                                    }
+                                }
                             }
+                            return "";
                         },
-                        clientState.isBoardReadyProperty(), clientState.isOnTurnProperty()
+                        isInGame, clientState.isBoardReadyProperty(), clientState.isOnTurnProperty()
                 )
         );
 
@@ -156,6 +175,7 @@ public class RoomFactory {
 
             switch (exception) {
                 case IllegalArgumentException e -> Platform.runLater(RoomFactory::handleIllegalBoard);
+                case IllegalStateException e -> Platform.runLater(RoomFactory::handleNotYourTurn);
                 /*case IOException e -> {
                     Platform.runLater(() -> handleIO(e));
                 }*/
@@ -173,6 +193,14 @@ public class RoomFactory {
         alert.setTitle("Error");
         alert.setHeaderText("Invalid Board");
         alert.setContentText("Check the validity of the game board.");
+        alert.showAndWait();
+    }
+
+    private static void handleNotYourTurn() {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText("Not Your Turn");
+        alert.setContentText("Wait for the opponent's turn.");
         alert.showAndWait();
     }
 

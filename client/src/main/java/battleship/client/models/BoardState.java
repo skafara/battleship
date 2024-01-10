@@ -57,6 +57,11 @@ public class BoardState {
         return getField(row, col) == Field.Ship;
     }
 
+    public boolean isGuess(int row, int col) {
+        Field field = getField(row, col);
+        return field == Field.Hit || field == Field.Miss;
+    }
+
     public void setField(Field field, int row, int col) {
         board.set(getFieldIndex(row, col), field);
     }
@@ -71,6 +76,10 @@ public class BoardState {
 
     private int getFieldIndex(int row, int col) {
         return SIZE * row + col;
+    }
+
+    public static String SerializeField(int row, int col) {
+        return String.format("%d%d", row, col);
     }
 
     private boolean processShip(int row, int col, boolean[] visited, Map<Integer, Integer> shipsSizesCnts) {
