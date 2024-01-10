@@ -3,17 +3,20 @@
 #include <unistd.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <signal.h>
 
 
 namespace ntwrk {
+
+	void SocketAcceptor::Initialize() {
+		signal(SIGPIPE, SIG_IGN);
+	}
 
 	SocketAcceptor::SocketAcceptor(const std::string &addr, uint16_t port, int backlog) {
 		_socket = socket(AF_INET, SOCK_STREAM, 0);
 		if (_socket == -1) {
 			throw -1; // TODO
 		}
-
-		signal(SIGPIPE, SIG_IGN);
 
 		int reuse = 1; // chatgpt
 		if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) { //chatgpt

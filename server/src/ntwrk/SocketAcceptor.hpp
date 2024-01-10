@@ -12,6 +12,8 @@ namespace ntwrk {
 	public:
 		static constexpr int kDef_Backlog = 5;
 
+		static void Initialize();
+
 		SocketAcceptor(const std::string &addr, uint16_t port, int backlog = kDef_Backlog);
 
 		SocketAcceptor(const SocketAcceptor &other) = delete;
