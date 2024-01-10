@@ -2,6 +2,7 @@
 
 #include <set>
 #include <chrono>
+#include <memory>
 
 #include "../msgs/Message.hpp"
 
