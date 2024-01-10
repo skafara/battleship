@@ -19,19 +19,24 @@ void Server::Serve() {
 	std::thread th_clients_terminator{&Server::Clients_Terminator, this};
 
 	for (;;) {
-		std::unique_ptr<ntwrk::Socket> sock = Accept_Connection();
+		try {
+			std::unique_ptr<ntwrk::Socket> sock = Accept_Connection();
 
-		std::lock_guard lck{Get_Mutex()};
-		if (_clients.size() >= _lim_clients) {
-			Refuse_Connection(std::move(sock));
-			continue;
+			std::lock_guard lck{Get_Mutex()};
+			if (_clients.size() >= _lim_clients) {
+				Refuse_Connection(std::move(sock));
+				continue;
+			}
+
+			std::shared_ptr<game::Client> client = std::make_shared<game::Client>(std::move(sock));
+			_clients.push_back(client);
+
+			std::thread thread{&Server::Serve_Client, this, client};
+			thread.detach();
 		}
-
-		std::shared_ptr<game::Client> client = std::make_shared<game::Client>(std::move(sock));
-		_clients.push_back(client);
-
-		std::thread thread{&Server::Serve_Client, this, client};
-		thread.detach();
+		catch (const ntwrk::SocketException &e) {
+			std::cerr << e.what() << std::endl;
+		}
 	}
 }
 
@@ -48,10 +53,6 @@ void Server::Serve_Client(std::shared_ptr<game::Client> client) {
 	client->Send_Msg(msgs::Messages::Welcome());
 	client->Set_Last_Active(std::chrono::steady_clock::now());
 	game::StateMachine::Run(*this, client);
-}
-
-void Server::Terminate_Client(std::shared_ptr<game::Client> client) {
-
 }
 
 size_t Server::Get_Lim_Rooms() const {
@@ -114,7 +115,6 @@ bool Server::Is_Nickname_Disconnected(const std::string &nickname) const {
 }
 
 void Server::Disconnect_Client(const std::shared_ptr<game::Client> client) {
-	std::cout << "Disconnect" << std::endl;
 	const game::State &state = client->Get_State();
 	if (state == game::State::kInit || state == game::State::kIn_Lobby) {
 		client->Send_Msg(msgs::Messages::Conn_Term());

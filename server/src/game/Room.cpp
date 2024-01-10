@@ -38,7 +38,7 @@ namespace game {
 			}
 		}
 
-		throw -1;
+		throw std::runtime_error{"Joining Full Room"};
 	}
 
 	Client &Room::Get_Opponent(const Client &client) {
@@ -84,7 +84,7 @@ namespace game {
 			}
 		}
 
-		throw -1;
+		throw std::runtime_error{"Client Not In Room"};
 	}
 
 	void Room::Set_Board(const Client &client, const Board &board) {

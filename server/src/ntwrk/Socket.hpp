@@ -2,9 +2,18 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <stdexcept>
+#include <string>
 
 
 namespace ntwrk {
+
+	class SocketException : public std::runtime_error {
+	public:
+		SocketException(std::string text) : std::runtime_error(text) {
+			//
+		}
+	};
 
 	class Socket {
 	public:
@@ -17,8 +26,6 @@ namespace ntwrk {
 		Socket &operator=(Socket &&other) noexcept;
 
 		~Socket();
-
-		//size_t Has_Bytes();
 
 		std::byte Read_Byte() const;
 		void Write_Byte(std::byte byte) const;

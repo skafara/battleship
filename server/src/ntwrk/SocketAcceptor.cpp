@@ -15,12 +15,12 @@ namespace ntwrk {
 	SocketAcceptor::SocketAcceptor(const std::string &addr, uint16_t port, int backlog) {
 		_socket = socket(AF_INET, SOCK_STREAM, 0);
 		if (_socket == -1) {
-			throw -1; // TODO
+			throw SocketException{"Cannot Bind Socket Acceptor"};
 		}
 
-		int reuse = 1; // chatgpt
-		if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) { //chatgpt
-			// Handle the error
+		int reuse = 1;
+		if (setsockopt(_socket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
+			throw SocketException{"Cannot Set Socket Reuse"};
 		}
 
 		sockaddr_in sock_addr{};
@@ -29,25 +29,13 @@ namespace ntwrk {
 		sock_addr.sin_addr.s_addr = Compute_Sock_Addr(addr);
 
 		if (bind(_socket, reinterpret_cast<sockaddr *>(&sock_addr), sizeof(sock_addr)) == -1) {
-			throw -1; // TODO
+			throw SocketException{"Cannot Bind Socket Acceptor"};
 		}
 
 		if (listen(_socket, backlog) == -1) {
-			throw -1; // TODO
+			throw SocketException{"Cannot Listen On Socket Acceptor"};
 		}
 	}
-
-	/*SocketAcceptor::SocketAcceptor(SocketAcceptor &&other) noexcept : _socket(other._socket) {
-		other._socket = -1;
-	}
-
-	SocketAcceptor &SocketAcceptor::operator=(SocketAcceptor &&other) noexcept {
-		_socket = other._socket;
-
-		other._socket = -1;
-
-		return *this;
-	}*/
 
 	SocketAcceptor::~SocketAcceptor() {
 		if (_socket != -1) {
@@ -61,7 +49,7 @@ namespace ntwrk {
 
 		const int fd = accept(_socket, &peer_addr, &peer_addr_len);
 		if (fd == -1) {
-			throw -1; // TODO
+			throw SocketException{"Cannot Accept Socket Connection"};
 		}
 
 		return Socket{fd};
@@ -74,7 +62,7 @@ namespace ntwrk {
 
 		const int status = getaddrinfo(addr.c_str(), nullptr, &hints, &res);
 		if (status != 0) {
-			throw -1; // TODO
+			throw SocketException{"Cannot Get Address Info For: " + addr};
 		}
 
 		const in_addr_t ip = reinterpret_cast<sockaddr_in *>(res->ai_addr)->sin_addr.s_addr;

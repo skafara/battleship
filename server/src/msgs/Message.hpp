@@ -4,9 +4,17 @@
 #include <sstream>
 #include <map>
 #include <vector>
+#include <exception>
 
 
 namespace msgs {
+
+	class IllegalMessageException : public std::runtime_error {
+	public:
+		IllegalMessageException(std::string text) : std::runtime_error(text) {
+			//
+		}
+	};
 
 	template <typename T>
 	concept IntegralValue = std::is_integral_v<std::remove_reference_t<T>>;

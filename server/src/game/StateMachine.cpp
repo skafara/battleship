@@ -51,7 +51,7 @@ namespace game {
 				std::lock_guard lck{_server.Get_Mutex()};
 
 				if (!kExpected_Msgs.at(_client->Get_State()).contains(msg.Get_Type())) {
-					throw -1;
+					throw msgs::IllegalMessageException{"Illegal Client State Message"};
 				}
 
 				const std::pair<State, msgs::MessageType> pair{_client->Get_State(), msg.Get_Type()};
@@ -60,7 +60,22 @@ namespace game {
 					_client->Set_State(kSuccess_Transitions.at({_client->Get_State(), msg.Get_Type()}));
 				}
 			}
-			catch (...) {
+			catch (const ntwrk::SocketException &e) {
+				std::cerr << e.what() << std::endl;
+				std::lock_guard lck{_server.Get_Mutex()};
+
+				_server.Disconnect_Client(_client);
+				return;
+			}
+			catch (const msgs::IllegalMessageException &e) {
+				std::cerr << e.what() << std::endl;
+				std::lock_guard lck{_server.Get_Mutex()};
+
+				_server.Disconnect_Client(_client);
+				return;
+			}
+			catch (const TimeoutException &e) {
+				std::cerr << e.what() << std::endl;
 				std::lock_guard lck{_server.Get_Mutex()};
 
 				_server.Disconnect_Client(_client);
@@ -74,29 +89,32 @@ namespace game {
 			std::promise<msgs::Message> promise;
 			std::future<msgs::Message> future = promise.get_future();
 
-			bool msg_received = false;
-			std::thread th{[this, &promise, &msg_received]() {
+			const auto Get_Msg = [](const Client &client,std::promise<msgs::Message> &promise) {
 				try {
-					const msgs::Message msg = _client->Recv_Msg();
-					msg_received = true;
+					const msgs::Message msg = client.Recv_Msg();
 					promise.set_value(msg);
 				}
-				catch (...) {
-					promise.set_exception(std::current_exception());
+				catch (const msgs::IllegalMessageException &e) {
+					promise.set_exception(std::make_exception_ptr(e));
 				}
-			}};
+				catch (const ntwrk::SocketException &e) {
+					promise.set_exception(std::make_exception_ptr(e));
+				}
+			};
 
-			future.wait_until(_client->Get_Last_Active() + Timeout_Short);
-			if (!msg_received) {
+			std::thread thread{Get_Msg, std::ref(*_client), std::ref(promise)};
+
+			auto future_status = future.wait_until(_client->Get_Last_Active() + Timeout_Short);
+			if (future_status == std::future_status::timeout) {
 				// ! Linux specific ! //
-				const pthread_t handle = th.native_handle();
+				const pthread_t handle = thread.native_handle();
 				pthread_cancel(handle);
 
-				th.join();
-				throw -1;
+				thread.join();
+				throw TimeoutException("Receive Message Timed Out");
 			}
 
-			th.join();
+			thread.join();
 			_client->Set_Last_Active(std::chrono::steady_clock::now());
 			const msgs::Message msg = future.get();
 			if (msg.Get_Type() == msgs::MessageType::kKeep_Alive) {
@@ -108,7 +126,7 @@ namespace game {
 	}
 
 	bool StateMachine::Handle_Nickname_Set(const msgs::Message &msg) {
-		const std::string &nickname = msg.Get_Param(0); // TODO nickname illegal
+		const std::string &nickname = msg.Get_Param(0);
 
 		if (_server.Is_Nickname_Active(nickname)) {
 			_client->Send_Msg(msgs::Messages::Nickname_Exists());
@@ -193,7 +211,7 @@ namespace game {
 	bool StateMachine::Handle_Board_Ready(const msgs::Message &msg) {
 		const std::shared_ptr<Room> room = _server.Get_Room(_client);
 		if (room->Is_Board_Ready(*_client)) {
-			throw -1;
+			throw msgs::IllegalMessageException{"Illegal Board Ready Message State"};
 		}
 
 		try {
@@ -206,7 +224,7 @@ namespace game {
 			}
 
 			if (!board.Is_Valid()) {
-				throw std::invalid_argument{"aaaaaaa"};
+				throw std::invalid_argument{"Invalid Board"};
 			}
 
 			room->Set_Board(*_client, board);
@@ -258,7 +276,7 @@ namespace game {
 			Client &opponent = room->Get_Opponent(*_client);
 			Board &board = room->Get_Board(opponent);
 			if (board.Is_Guess(field_pos.first, field_pos.second)) {
-				throw std::invalid_argument{""};
+				throw std::invalid_argument{"Guessing Previously Guessed Fields"};
 			}
 
 			if (board.Turn(field_pos.first, field_pos.second)) {

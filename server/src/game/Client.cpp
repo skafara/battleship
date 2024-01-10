@@ -8,30 +8,9 @@ namespace game {
 		//
 	}
 
-	/*Client::Client(Client &&other) noexcept :
-		_sock(std::move(other._sock)),
-		_nickname(std::move(other._nickname)),
-		_state(other._state),
-		_last_active(other._last_active) {
-		//
-	}
-
-	Client &Client::operator=(Client &&other) noexcept {
-		_sock = std::move(other._sock);
-		_nickname = std::move(other._nickname);
-		_state = other._state;
-		_last_active = other._last_active;
-
-		return *this;
-	}*/
-
 	bool operator==(const Client &lhs, const Client &rhs) {
 		return lhs._nickname == rhs._nickname;
 	}
-
-	/*std::mutex &Client::Get_Mutex_State() const {
-		return _mutex_state;
-	}*/
 
 	State Client::Get_State() const {
 		return _state;
@@ -70,7 +49,7 @@ namespace game {
 
 	msgs::Message Client::Recv_Msg() const {
 		if (!_sock) {
-			throw -1;
+			throw ntwrk::SocketException{"Closed Client Socket"};
 		}
 		return msgs::Communicator::Recv(*_sock);
 	}
@@ -86,9 +65,5 @@ namespace game {
 	void Client::Close_Socket() {
 		_sock = nullptr;
 	}
-
-	/*void Client::Await_Ack() const {
-		Await_Msg({msgs::MessageType::kAck});
-	}*/
 
 } // game

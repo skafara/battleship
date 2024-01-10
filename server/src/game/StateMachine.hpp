@@ -2,6 +2,7 @@
 
 #include <map>
 #include <functional>
+#include <exception>
 
 #include "../msgs/Message.hpp"
 #include "../I_ServerOps.hpp"
@@ -10,6 +11,13 @@
 class I_ServerOps;
 
 namespace game {
+
+	class TimeoutException : public std::runtime_error {
+	public:
+		TimeoutException(std::string text) : std::runtime_error(text) {
+			//
+		}
+	};
 
 	class StateMachine;
 	using t_Handler = std::function<bool (StateMachine &, const msgs::Message &)>;

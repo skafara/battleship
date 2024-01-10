@@ -54,5 +54,4 @@ private:
 	void Clients_Terminator();
 
 	void Serve_Client(std::shared_ptr<game::Client> client);
-	void Terminate_Client(std::shared_ptr<game::Client> client);
 };

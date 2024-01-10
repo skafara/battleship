@@ -8,7 +8,7 @@ namespace ntwrk {
 
 	Socket::Socket(int fd) : _fd(fd) {
 		if (fcntl(_fd, F_GETFD) == -1) {
-			throw -1;
+			throw SocketException{"Invalid File Descriptor"};
 		}
 	}
 
@@ -33,15 +33,12 @@ namespace ntwrk {
 	std::byte Socket::Read_Byte() const {
 		std::byte byte;
 		if (read(_fd, &byte, 1) != 1) {
-			throw -1;
+			throw SocketException{"Cannot Read From Socket"};
 		}
 		return byte;
 	}
 
 	void Socket::Write_Byte(std::byte byte) const {
-		/*if (write(_fd, &byte, 1) != 1) {
-			throw -1;
-		}*/
 		write(_fd, &byte, 1);
 	}
 

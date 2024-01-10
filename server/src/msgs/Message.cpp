@@ -41,19 +41,19 @@ namespace msgs {
 			return pair.second == type_str;
 		});
 		if (it_msg_type == std::end(kMessageType_String)) {
-			throw -1;
+			throw IllegalMessageException{"Unknown Message Type"};
 		}
 
 		const MessageType type = (*it_msg_type).first;
 		if (!kMessageType_Params_Cnt.contains(type)) {
-			throw -1;
+			throw IllegalMessageException{"Unexpected Message Type"};
 		}
 
 		Message msg{type};
 
 		if (str.length() == type_str.length()) {
 			if (msg._params.size() != kMessageType_Params_Cnt.at(msg.Get_Type())) {
-				throw -1;
+				throw IllegalMessageException{"Invalid Message Parameters Count"};
 			}
 
 			return msg;
@@ -86,7 +86,7 @@ namespace msgs {
 		}
 
 		if (msg._params.size() != kMessageType_Params_Cnt.at(msg.Get_Type())) {
-			throw -1;
+			throw IllegalMessageException{"Invalid Message Parameters Count"};
 		}
 
 		return msg;

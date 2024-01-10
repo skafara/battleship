@@ -101,13 +101,13 @@ namespace game {
 
 	std::pair<size_t, size_t> Board::Deserialize_Field(const std::string &field) {
 		if (field.length() != 2) {
-			throw std::invalid_argument{"bbbbbbb"};
+			throw std::invalid_argument{"Invalid Field Position Length"};
 		}
 
 		const size_t row = field[0] - '0';
 		const size_t col = field[1] - '0';
 		if (row >= kSize || col >= kSize) {
-			throw std::invalid_argument{"bbbbbbb"};
+			throw std::invalid_argument{"Invalid Field Position"};
 		}
 
 		return {row, col};
