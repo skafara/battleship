@@ -18,6 +18,11 @@ namespace ntwrk {
 			// Handle the error
 		}
 
+		int set = 1; // chatgpt
+		if (setsockopt(_socket, SOL_SOCKET, SO_NOSIGPIPE, &set, sizeof(set)) < 0) { // chatgpt
+			// Handle the error
+		};
+
 		sockaddr_in sock_addr{};
 		sock_addr.sin_family = AF_INET;
 		sock_addr.sin_port = htons(port);

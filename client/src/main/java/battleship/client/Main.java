@@ -1,17 +1,30 @@
 package battleship.client;
 
+import battleship.client.views.StageManager;
 import javafx.application.Application;
-import javafx.scene.Scene;
-import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
 
 public class Main extends Application {
+
+    private StageManager stageManager;
+
+    @Override
+    public void init() throws Exception {
+        super.init();
+
+        stageManager = new StageManager();
+    }
+
     @Override
     public void start(Stage stage) {
-        Scene scene = new Scene(new FlowPane(), 640, 480);
-        stage.setTitle("Battleship");
-        stage.setScene(scene);
-        stage.show();
+        stageManager.setStage(stage);
+        stageManager.setScene(StageManager.Scene.Index);
+        stageManager.showStage();
+    }
+
+    @Override
+    public void stop() throws Exception {
+        super.stop();
     }
 
     public static void main(String[] args) {

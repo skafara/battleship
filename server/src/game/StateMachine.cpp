@@ -60,7 +60,7 @@ namespace game {
 					_client->Set_State(kSuccess_Transitions.at({_client->Get_State(), msg.Get_Type()}));
 				}
 			}
-			catch (int i) {
+			catch (...) {
 				std::lock_guard lck{_server.Get_Mutex()};
 
 				_server.Disconnect_Client(_client);
@@ -76,9 +76,14 @@ namespace game {
 
 			bool msg_received = false;
 			std::thread th{[this, &promise, &msg_received]() {
-				const msgs::Message msg = _client->Recv_Msg();
-				msg_received = true;
-				promise.set_value(msg);
+				try {
+					const msgs::Message msg = _client->Recv_Msg();
+					msg_received = true;
+					promise.set_value(msg);
+				}
+				catch (...) {
+					promise.set_exception(std::current_exception());
+				}
 			}};
 
 			future.wait_until(_client->Get_Last_Active() + Timeout_Short);

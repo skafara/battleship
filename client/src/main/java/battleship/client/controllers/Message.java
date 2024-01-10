@@ -1,0 +1,127 @@
+package battleship.client.controllers;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+public class Message {
+
+    public enum Type {
+        WELCOME,
+        KEEP_ALIVE,
+        ACK,
+        LIMIT_CLIENTS,
+        NICKNAME_SET,
+        ROOM_CREATE,
+        ROOM_CREATED,
+        LIMIT_ROOMS,
+        ROOM_JOIN,
+        ROOM_FULL,
+        ROOM_NOT_EXISTS
+    }
+
+    private static final Map<Type, Integer> PARAMETERS_COUNTS = Map.of(
+            Type.WELCOME, 4,
+            Type.LIMIT_CLIENTS, 1,
+            Type.ACK, 0,
+            Type.ROOM_CREATED, 1,
+            Type.LIMIT_ROOMS, 1,
+            Type.ROOM_FULL, 0,
+            Type.ROOM_NOT_EXISTS, 0
+    );
+
+    private final Type type;
+    private final List<String> parameters;
+
+    public Message(Type type, Object... parameters) {
+        this.type = type;
+        this.parameters = new ArrayList<>();
+        for (Object parameter : parameters) {
+            this.parameters.add(parameter.toString());
+        }
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    public String getParameter(int idx) {
+        return parameters.get(idx);
+    }
+
+    public String Serialize() {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder.append(type.name());
+        for (String parameter : parameters) {
+            stringBuilder.append('|');
+            for (int i = 0; i < parameter.length(); i++) {
+                char c = parameter.charAt(i);
+                if (c == '\\' || c == '|') {
+                    stringBuilder.append('\\');
+                }
+                stringBuilder.append(c);
+            }
+        }
+
+        return stringBuilder.toString();
+    }
+
+    public static Message Deserialize(String string) {
+        String[] parts = string.split("\\|");
+        if (parts.length == 0) {
+            throw new RuntimeException();
+        }
+
+        Type type;
+        try {
+            type = Type.valueOf(parts[0]);
+        }
+        catch (IllegalArgumentException e) {
+            throw new RuntimeException();
+        }
+
+        if (!PARAMETERS_COUNTS.containsKey(type)) {
+            throw new RuntimeException();
+        }
+
+        if (string.length() == type.name().length()) {
+            return new Message(type);
+        }
+
+        List<String> parameters = new ArrayList<>();
+        boolean escape = false;
+        StringBuilder stringBuilder = new StringBuilder();
+        for (int i = type.name().length() + 1; ; i++) {
+            if (i >= string.length()) {
+                parameters.add(stringBuilder.toString());
+                break;
+            }
+
+            char c = string.charAt(i);
+            if (!escape) {
+                if (c == '\\') {
+                    escape = true;
+                    continue;
+                }
+
+                if (c == '|') {
+                    parameters.add(stringBuilder.toString());
+                    stringBuilder = new StringBuilder();
+                    continue;
+                }
+            }
+
+            escape = false;
+            stringBuilder.append(c);
+        }
+
+        if (PARAMETERS_COUNTS.get(type) != parameters.size()) {
+            throw new RuntimeException();
+        }
+
+        return new Message(type, parameters.toArray());
+    }
+
+}
