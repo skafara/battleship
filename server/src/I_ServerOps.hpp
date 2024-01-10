@@ -1,5 +1,7 @@
 #pragma once
 
+#include <mutex>
+
 #include "game/Room.hpp"
 #include "game/StateMachine.hpp"
 
