@@ -72,9 +72,7 @@ public class FormLobby extends HBox {
 
         future.whenCompleteAsync((value, exception) -> {
             if (exception == null) {
-                Platform.runLater(() -> {
-                    controller.getStageManager().setScene(StageManager.Scene.Room);
-                });
+                Platform.runLater(() -> controller.getStageManager().setScene(StageManager.Scene.Room));
                 applicationState.lobbyDisableProperty().set(false);
                 return;
             }
@@ -101,9 +99,7 @@ public class FormLobby extends HBox {
 
         future.whenCompleteAsync((value, exception) -> {
             if (exception == null) {
-                Platform.runLater(() -> {
-                    controller.getStageManager().setScene(StageManager.Scene.Room);
-                });
+                Platform.runLater(() -> controller.getStageManager().setScene(StageManager.Scene.Room));
                 applicationState.lobbyDisableProperty().set(false);
                 return;
             }

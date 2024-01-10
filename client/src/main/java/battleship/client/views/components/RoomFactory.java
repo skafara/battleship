@@ -12,6 +12,7 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -46,39 +47,13 @@ public class RoomFactory {
         Button buttonLeaveRoom = FormFactory.getButton("Leave Room", e -> handleButtonLeaveRoom(model, controller));
         buttonLeaveRoom.disableProperty().bind(model.applicationState.buttonLeaveRoomDisableProperty());
 
-        Button buttonReady = FormFactory.getButton("Ready", e -> System.out.println("ready"));
-
-        vBox.getChildren().addAll(textRoomCode, buttonLeaveRoom, buttonReady);
+        vBox.getChildren().addAll(textRoomCode, buttonLeaveRoom);
+        if (!model.clientState.isBoardReadyProperty().get()) {
+            Button buttonReady = FormFactory.getButton("Ready", e -> handleButtonReady(model, controller));
+            vBox.getChildren().add(buttonReady);
+        }
 
         return vBox;
-    }
-
-    private static void handleButtonLeaveRoom(Model model, Controller controller) {
-        ApplicationState applicationState = model.applicationState;
-        applicationState.buttonLeaveRoomDisableProperty().set(true);
-
-        CompletableFuture<Void> future = controller.leaveRoom();
-
-        future.whenCompleteAsync((value, exception) -> {
-            if (exception == null) {
-                Platform.runLater(() -> {
-                    controller.getStageManager().setScene(StageManager.Scene.Lobby);
-                });
-                applicationState.buttonLeaveRoomDisableProperty().set(false);
-                return;
-            }
-
-            switch (exception) {
-                /*case IOException e -> {
-                    Platform.runLater(() -> handleIO(e));
-                }*/
-                default -> {
-                    //
-                }
-            }
-
-            applicationState.buttonLeaveRoomDisableProperty().set(false);
-        });
     }
 
     public static HBox getBoards(Model model, Controller controller) {
@@ -138,6 +113,67 @@ public class RoomFactory {
 
         vBox.getChildren().addAll(textNickname, board, textDescription);
         return vBox;
+    }
+
+    private static void handleButtonLeaveRoom(Model model, Controller controller) {
+        ApplicationState applicationState = model.applicationState;
+        applicationState.buttonLeaveRoomDisableProperty().set(true);
+
+        CompletableFuture<Void> future = controller.leaveRoom();
+
+        future.whenCompleteAsync((value, exception) -> {
+            if (exception == null) {
+                Platform.runLater(() -> controller.getStageManager().setScene(StageManager.Scene.Lobby));
+                applicationState.buttonLeaveRoomDisableProperty().set(false);
+                return;
+            }
+
+            switch (exception) {
+                /*case IOException e -> {
+                    Platform.runLater(() -> handleIO(e));
+                }*/
+                default -> {
+                    //
+                }
+            }
+
+            applicationState.buttonLeaveRoomDisableProperty().set(false);
+        });
+    }
+
+    private static void handleButtonReady(Model model, Controller controller) {
+        ApplicationState applicationState = model.applicationState;
+        applicationState.buttonReadyDisableProperty().set(true);
+
+        CompletableFuture<Void> future = controller.boardReady(model.clientState.getBoard());
+
+        future.whenCompleteAsync((value, exception) -> {
+            if (exception == null) {
+                applicationState.buttonReadyDisableProperty().set(false);
+                Platform.runLater(() -> controller.getStageManager().setScene(StageManager.Scene.Room));
+                return;
+            }
+
+            switch (exception) {
+                case IllegalArgumentException e -> Platform.runLater(RoomFactory::handleIllegalBoard);
+                /*case IOException e -> {
+                    Platform.runLater(() -> handleIO(e));
+                }*/
+                default -> {
+                    //
+                }
+            }
+
+            applicationState.buttonReadyDisableProperty().set(false);
+        });
+    }
+
+    private static void handleIllegalBoard() { // TODO factory?
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText("Invalid Board");
+        alert.setContentText("Check the validity of the game board.");
+        alert.showAndWait();
     }
 
 }

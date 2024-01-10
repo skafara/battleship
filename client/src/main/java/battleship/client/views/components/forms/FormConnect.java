@@ -53,9 +53,7 @@ public class FormConnect extends VBox {
 
         future.whenCompleteAsync((value, exception) -> {
             if (exception == null) {
-                Platform.runLater(() -> {
-                    controller.getStageManager().setScene(StageManager.Scene.Lobby);
-                });
+                Platform.runLater(() -> controller.getStageManager().setScene(StageManager.Scene.Lobby));
                 applicationState.buttonConnectDisableProperty().set(false);
                 return;
             }

@@ -10,6 +10,7 @@ public class ApplicationState {
     private final BooleanProperty buttonConnectDisable = new SimpleBooleanProperty(false);
     private final BooleanProperty lobbyDisable = new SimpleBooleanProperty(false);
     private final BooleanProperty buttonLeaveRoomDisable = new SimpleBooleanProperty(false);
+    private final BooleanProperty buttonReadyDisable = new SimpleBooleanProperty(false);
 
     private final StringProperty serverAddress = new SimpleStringProperty("10.0.1.62");
     private final StringProperty serverPort = new SimpleStringProperty("50000");
@@ -22,6 +23,14 @@ public class ApplicationState {
 
     public BooleanProperty lobbyDisableProperty() {
         return lobbyDisable;
+    }
+
+    public BooleanProperty buttonLeaveRoomDisableProperty() {
+        return buttonLeaveRoomDisable;
+    }
+
+    public BooleanProperty buttonReadyDisableProperty() {
+        return buttonReadyDisable;
     }
 
     public StringProperty serverAddressProperty() {
@@ -38,10 +47,6 @@ public class ApplicationState {
 
     public StringProperty roomCodeProperty() {
         return roomCode;
-    }
-
-    public BooleanProperty buttonLeaveRoomDisableProperty() {
-        return buttonLeaveRoomDisable;
     }
 
 }

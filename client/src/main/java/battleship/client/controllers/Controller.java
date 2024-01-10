@@ -2,12 +2,16 @@ package battleship.client.controllers;
 
 import battleship.client.controllers.exceptions.NotExistsException;
 import battleship.client.controllers.exceptions.ReachedLimitException;
+import battleship.client.models.BoardState;
 import battleship.client.models.Model;
+import battleship.client.views.Board;
 import battleship.client.views.StageManager;
 
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -137,8 +141,6 @@ public class Controller {
             } catch (ExecutionException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
-
-            future.complete(null);
         }).start();
 
         return future;
@@ -146,7 +148,6 @@ public class Controller {
 
     public CompletableFuture<Void> leaveRoom() {
         CompletableFuture<Void> future = new CompletableFuture<>();
-
         new Thread(() -> {
             CompletableFuture<Message> responseFuture = expectMessage(Message.Type.ACK);
             try {
@@ -154,6 +155,7 @@ public class Controller {
                 responseFuture.get();
 
                 model.applicationState.roomCodeProperty().set("");
+                model.clientState.getBoard().reset();
                 model.opponentState.reset();
                 future.complete(null);
             } catch (IOException e) {
@@ -161,8 +163,38 @@ public class Controller {
             } catch (ExecutionException | InterruptedException e) {
                 throw new RuntimeException(e);
             }
+        }).start();
 
-            future.complete(null);
+        return future;
+    }
+
+    public CompletableFuture<Void> boardReady(BoardState boardState) {
+        CompletableFuture<Void> future = new CompletableFuture<>();
+
+        if (!boardState.isValid()) {
+            future.completeExceptionally(new IllegalArgumentException());
+            return future;
+        }
+
+        new Thread(() -> {
+            CompletableFuture<Message> responseFuture = expectMessage(Message.Type.ACK, Message.Type.BOARD_ILLEGAL);
+            try {
+                sendMessage(getBoardReadyMessage(boardState));
+                Message response = responseFuture.get();
+
+                if (response.getType() == Message.Type.ACK) {
+                    model.clientState.isBoardReadyProperty().set(true);
+                    future.complete(null);
+                }
+                else {
+                    future.completeExceptionally(new IllegalArgumentException());
+                }
+            } catch (IOException e) {
+                future.completeExceptionally(e);
+            } catch (ExecutionException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
         }).start();
 
         return future;
@@ -178,6 +210,18 @@ public class Controller {
 
     public CompletableFuture<Message> expectMessage(Message.Type... type) {
         return messagesManager.expectMessage(type);
+    }
+
+    private static Message getBoardReadyMessage(BoardState boardState) {
+        List<String> positions = new ArrayList<>();
+        for (int row = 0; row < BoardState.SIZE; row++) {
+            for (int col = 0; col < BoardState.SIZE; col++) {
+                if (boardState.isShip(row, col)) {
+                    positions.add(String.format("%d%d", row, col));
+                }
+            }
+        }
+        return new Message(Message.Type.BOARD_READY, positions.toArray());
     }
 
 }

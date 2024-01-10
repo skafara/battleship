@@ -18,7 +18,10 @@ public class Message {
         LIMIT_ROOMS,
         ROOM_JOIN,
         ROOM_FULL,
-        ROOM_LEAVE, ROOM_NOT_EXISTS
+        ROOM_NOT_EXISTS,
+        ROOM_LEAVE,
+        BOARD_READY,
+        BOARD_ILLEGAL
     }
 
     private static final Map<Type, Integer> PARAMETERS_COUNTS = Map.of(
@@ -28,7 +31,8 @@ public class Message {
             Type.ROOM_CREATED, 1,
             Type.LIMIT_ROOMS, 1,
             Type.ROOM_FULL, 0,
-            Type.ROOM_NOT_EXISTS, 0
+            Type.ROOM_NOT_EXISTS, 0,
+            Type.BOARD_ILLEGAL, 0
     );
 
     private final Type type;
