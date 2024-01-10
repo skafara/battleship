@@ -3,6 +3,7 @@
 #include "CliArgsParser.hpp"
 #include "Server.hpp"
 
+
 void Print_Info() {
 	std::cout << "| bserver - Battleship Server" << std::endl;
 	std::cout << "| Seminar Work of KIV/UPS, 2024" << std::endl;
@@ -31,6 +32,7 @@ int main(int argc, char **argv) {
 	try {
 		CliArgsParser::Result args = CliArgsParser::Parse(argc, argv);
 
+		ntwrk::SocketAcceptor::Initialize();
 		Server server{args.ip, args.port, args.lim_clients, args.lim_rooms};
 		server.Serve();
 	} catch (const std::invalid_argument &e) {
