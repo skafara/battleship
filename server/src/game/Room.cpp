@@ -1,6 +1,8 @@
 #include "Room.hpp"
 #include "../util/Generator.hpp"
 
+#include <algorithm>
+
 
 namespace game {
 
