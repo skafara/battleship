@@ -10,6 +10,7 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -42,17 +43,25 @@ public class FormLobby extends HBox {
         vBox.setSpacing(FormFactory.SPACING);
         vBox.setAlignment(Pos.CENTER);
 
-        vBox.getChildren().addAll(
-                FormFactory.getBidirectionalyBoundFormInputField("Room Code", applicationState.roomCodeProperty()),
-                FormFactory.getButton("Join Room", (e) -> handleButtonJoinRoom(applicationState, controller))
-        );
+        FormInputField inputField = FormFactory.getBidirectionalyBoundFormInputField("Room Code", applicationState.roomCodeProperty());
+        inputField.getTextField().disableProperty().bind(applicationState.lobbyDisableProperty());
+
+        Button button = FormFactory.getButton("Join Room", (e) -> handleButtonJoinRoom(applicationState, controller));
+        button.disableProperty().bind(applicationState.lobbyDisableProperty());
+
+        vBox.getChildren().addAll(inputField, button);
         return vBox;
     }
 
     private VBox constructFormCreate(ApplicationState applicationState, Controller controller) {
-        VBox vBox = new VBox(FormFactory.getButton("Create Room", (e) -> handleButtonCreateRoom(applicationState, controller)));
+        VBox vBox = new VBox();
         vBox.setMinWidth(ITEM_MAX_WIDTH);
         vBox.setAlignment(Pos.CENTER);
+
+        Button button = FormFactory.getButton("Create Room", (e) -> handleButtonCreateRoom(applicationState, controller));
+        button.disableProperty().bind(applicationState.lobbyDisableProperty());
+
+        vBox.getChildren().add(button);
         return vBox;
     }
 
@@ -66,6 +75,7 @@ public class FormLobby extends HBox {
                 Platform.runLater(() -> {
                     controller.getStageManager().setScene(StageManager.Scene.Room);
                 });
+                applicationState.lobbyDisableProperty().set(false);
                 return;
             }
 
@@ -94,6 +104,7 @@ public class FormLobby extends HBox {
                 Platform.runLater(() -> {
                     controller.getStageManager().setScene(StageManager.Scene.Room);
                 });
+                applicationState.lobbyDisableProperty().set(false);
                 return;
             }
 

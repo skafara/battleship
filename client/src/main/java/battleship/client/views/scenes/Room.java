@@ -30,7 +30,7 @@ public class Room extends BorderPane {
     private BorderPane constructBottom(Model model) {
         BorderPane borderPane = new BorderPane();
         borderPane.setLeft(StatusFactory.getServerStatus(model.applicationState.serverAddressProperty(), model.clientState.isRespondingProperty()));
-        borderPane.setRight(StatusFactory.getOpponentStatus(model.opponentState.isRespondingProperty()));
+        borderPane.setRight(StatusFactory.getOpponentStatus(model.opponentState.isInRoomBinding(), model.opponentState.isRespondingProperty()));
         return borderPane;
     }
 

@@ -1,10 +1,14 @@
 package battleship.client.views.components;
 
 import battleship.client.controllers.Controller;
+import battleship.client.controllers.exceptions.ReachedLimitException;
+import battleship.client.models.ApplicationState;
 import battleship.client.models.ClientState;
 import battleship.client.models.Model;
 import battleship.client.views.Board;
+import battleship.client.views.StageManager;
 import battleship.client.views.components.forms.FormFactory;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -13,6 +17,11 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+
+import java.io.IOException;
+import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
+import java.util.concurrent.CompletableFuture;
 
 public class RoomFactory {
 
@@ -34,12 +43,42 @@ public class RoomFactory {
                 )
         );
 
-        Button buttonLeaveRoom = FormFactory.getButton("Leave Room", e -> System.out.println("leave"));
+        Button buttonLeaveRoom = FormFactory.getButton("Leave Room", e -> handleButtonLeaveRoom(model, controller));
+        buttonLeaveRoom.disableProperty().bind(model.applicationState.buttonLeaveRoomDisableProperty());
+
         Button buttonReady = FormFactory.getButton("Ready", e -> System.out.println("ready"));
 
         vBox.getChildren().addAll(textRoomCode, buttonLeaveRoom, buttonReady);
 
         return vBox;
+    }
+
+    private static void handleButtonLeaveRoom(Model model, Controller controller) {
+        ApplicationState applicationState = model.applicationState;
+        applicationState.buttonLeaveRoomDisableProperty().set(true);
+
+        CompletableFuture<Void> future = controller.leaveRoom();
+
+        future.whenCompleteAsync((value, exception) -> {
+            if (exception == null) {
+                Platform.runLater(() -> {
+                    controller.getStageManager().setScene(StageManager.Scene.Lobby);
+                });
+                applicationState.buttonLeaveRoomDisableProperty().set(false);
+                return;
+            }
+
+            switch (exception) {
+                /*case IOException e -> {
+                    Platform.runLater(() -> handleIO(e));
+                }*/
+                default -> {
+                    //
+                }
+            }
+
+            applicationState.buttonLeaveRoomDisableProperty().set(false);
+        });
     }
 
     public static HBox getBoards(Model model, Controller controller) {
@@ -55,13 +94,13 @@ public class RoomFactory {
         return hBox;
     }
 
-    private static VBox getBoardSide(ClientState clientState, Controller controller, boolean client) {
+    private static VBox getBoardSide(ClientState clientState, Controller controller, boolean isClient) {
         VBox vBox = new VBox();
         vBox.setSpacing(SPACING);
         vBox.setAlignment(Pos.CENTER);
 
         Text textNickname = new Text();
-        if (client) {
+        if (isClient) {
             textNickname.textProperty().bind(clientState.nicknameProperty());
         }
         else {
@@ -80,7 +119,7 @@ public class RoomFactory {
             );
         }
 
-        Board board = new Board(clientState, controller, client);
+        Board board = new Board(clientState, controller, isClient);
 
         Text textDescription = new Text();
         textDescription.textProperty().bind(

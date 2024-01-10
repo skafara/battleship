@@ -34,6 +34,10 @@ public class BoardState {
         return board;
     }
 
+    public void reset() {
+        Collections.fill(board, Field.None);
+    }
+
     private int getFieldIndex(int row, int col) {
         return SIZE * row + col;
     }

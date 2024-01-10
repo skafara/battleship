@@ -144,8 +144,28 @@ public class Controller {
         return future;
     }
 
-    public void leaveRoom() {
+    public CompletableFuture<Void> leaveRoom() {
+        CompletableFuture<Void> future = new CompletableFuture<>();
 
+        new Thread(() -> {
+            CompletableFuture<Message> responseFuture = expectMessage(Message.Type.ACK);
+            try {
+                sendMessage(new Message(Message.Type.ROOM_LEAVE));
+                responseFuture.get();
+
+                model.applicationState.roomCodeProperty().set("");
+                model.opponentState.reset();
+                future.complete(null);
+            } catch (IOException e) {
+                future.completeExceptionally(e);
+            } catch (ExecutionException | InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            future.complete(null);
+        }).start();
+
+        return future;
     }
 
     public void turn(int row, int col) {

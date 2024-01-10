@@ -1,6 +1,7 @@
 package battleship.client.views.components.status;
 
 import battleship.client.views.StageManager;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.StringProperty;
 import javafx.geometry.Insets;
@@ -19,8 +20,8 @@ public class StatusFactory {
         return serverStatus;
     }
 
-    public static OpponentStatus getOpponentStatus(BooleanProperty isResponding) {
-        OpponentStatus opponentStatus = new OpponentStatus(isResponding);
+    public static OpponentStatus getOpponentStatus(BooleanBinding isInRoom, BooleanProperty isResponding) {
+        OpponentStatus opponentStatus = new OpponentStatus(isInRoom, isResponding);
         opponentStatus.setAlignment(Pos.CENTER_RIGHT);
         opponentStatus.setPadding(new Insets(PADDING));
         opponentStatus.setMaxWidth(MAX_WIDTH);

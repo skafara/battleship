@@ -38,7 +38,7 @@ public class FormConnect extends VBox {
 
     private Button constructButton(ApplicationState applicationState, Controller controller) {
         Button button = FormFactory.getButton("Connect", (e) -> handleButtonConnect(applicationState, controller));
-        button.disableProperty().bindBidirectional(applicationState.buttonConnectDisableProperty());
+        button.disableProperty().bind(applicationState.buttonConnectDisableProperty());
         return button;
     }
 
@@ -56,6 +56,7 @@ public class FormConnect extends VBox {
                 Platform.runLater(() -> {
                     controller.getStageManager().setScene(StageManager.Scene.Lobby);
                 });
+                applicationState.buttonConnectDisableProperty().set(false);
                 return;
             }
 

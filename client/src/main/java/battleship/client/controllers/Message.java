@@ -18,7 +18,7 @@ public class Message {
         LIMIT_ROOMS,
         ROOM_JOIN,
         ROOM_FULL,
-        ROOM_NOT_EXISTS
+        ROOM_LEAVE, ROOM_NOT_EXISTS
     }
 
     private static final Map<Type, Integer> PARAMETERS_COUNTS = Map.of(
