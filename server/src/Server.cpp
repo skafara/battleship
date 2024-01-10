@@ -19,7 +19,6 @@ void Server::Serve() {
 
 	for (;;) {
 		std::unique_ptr<ntwrk::Socket> sock = Accept_Connection();
-		msgs::Communicator::Send(*sock, msgs::Messages::Welcome());
 
 		std::lock_guard lck{Get_Mutex()};
 		if (_clients.size() >= _lim_clients) {
@@ -45,6 +44,7 @@ void Server::Refuse_Connection(std::unique_ptr<ntwrk::Socket> sock) const {
 }
 
 void Server::Serve_Client(std::shared_ptr<game::Client> client) {
+	client->Send_Msg(msgs::Messages::Welcome());
 	client->Set_Last_Active(std::chrono::steady_clock::now());
 	game::StateMachine::Run(*this, client);
 }

@@ -56,13 +56,23 @@ public class Controller {
 
                     new Thread(new KeepAlive(communicator)).start();
 
-                    CompletableFuture<Message> welcomeFuture = expectMessage(Message.Type.WELCOME); // timeout (nebo jen odchytavat receive io exception?) + reconnect
+                    CompletableFuture<Message> welcomeFuture = expectMessage(Message.Type.WELCOME, Message.Type.LIMIT_CLIENTS); // timeout (nebo jen odchytavat receive io exception?) + reconnect
                     new Thread(messagesManager).start();
-                    welcomeFuture.get();
+                    Message welcomeMessage = welcomeFuture.get();
+                    if (welcomeMessage.getType() == Message.Type.LIMIT_CLIENTS) {
+                        future.completeExceptionally(new ReachedLimitException(Integer.parseInt(welcomeMessage.getParameter(0))));
+                    }
 
-                    CompletableFuture<Message> ackFuture = expectMessage(Message.Type.ACK);
+                    CompletableFuture<Message> responseFuture = expectMessage(Message.Type.ACK); // TODO rejoin
                     sendMessage(new Message(Message.Type.NICKNAME_SET, nickname));
-                    ackFuture.get();
+
+                    Message message = responseFuture.get();
+                    if (message.getType() == Message.Type.ACK) {
+                        // nic
+                    }
+                    else {
+                        // rejoin
+                    }
 
                     new Thread(stateMachine).start();
 

@@ -28,7 +28,13 @@ public class Message {
         OPPONENT_ROOM_LEAVE,
         GAME_BEGIN,
         TURN_SET,
-        TURN_RESULT, TURN_ILLEGAL, TURN_NOT_YOU, TURN, OPPONENT_NO_RESPONSE
+        OPPONENT_NO_RESPONSE,
+        TURN,
+        TURN_RESULT,
+        TURN_ILLEGAL,
+        TURN_NOT_YOU,
+        OPPONENT_TURN,
+        GAME_END
     }
 
     private static final Map<Type, Integer> PARAMETERS_COUNTS = Map.ofEntries(
@@ -46,7 +52,12 @@ public class Message {
             Map.entry(Type.OPPONENT_ROOM_LEAVE, 0),
             Map.entry(Type.GAME_BEGIN, 1),
             Map.entry(Type.TURN_SET, 1),
-            Map.entry(Type.OPPONENT_NO_RESPONSE, 1)
+            Map.entry(Type.OPPONENT_NO_RESPONSE, 1),
+            Map.entry(Type.TURN_RESULT, 2),
+            Map.entry(Type.TURN_ILLEGAL, 0),
+            Map.entry(Type.TURN_NOT_YOU, 0),
+            Map.entry(Type.OPPONENT_TURN, 2),
+            Map.entry(Type.GAME_END, 1)
     );
 
     private final Type type;

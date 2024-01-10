@@ -23,6 +23,8 @@ namespace game {
 		Board &Get_Board(const Client &client);
 		void Set_Board(const Client &client, const Board &board);
 
+		void Reset_Boards();
+
 		void Set_Board_Ready(const Client &client);
 		bool Is_Board_Ready(const Client &client);
 		//bool Is_Both_Boards_Ready() const;

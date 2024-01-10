@@ -99,7 +99,7 @@ public class RoomFactory {
             );
         }
 
-        Board board = new Board(clientState, controller, isClient);
+        Board board = new Board(clientState, controller, isClient, isInGame);
 
         Text textDescription = new Text();
         textDescription.textProperty().bind(

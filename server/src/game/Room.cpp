@@ -76,7 +76,7 @@ namespace game {
 	}
 
 	size_t Room::Get_Client_Idx(const Client &client) const {
-		for (size_t i = 0; i < 2; ++i) {
+		for (size_t i = 0; i < _clients.size(); ++i) {
 			if (*(_clients[i]) == client) {
 				return i;
 			}
@@ -87,6 +87,13 @@ namespace game {
 
 	void Room::Set_Board(const Client &client, const Board &board) {
 		_boards[Get_Client_Idx(client)] = board;
+	}
+
+	void Room::Reset_Boards() {
+		for (size_t i = 0; i < _clients.size(); ++i) {
+			_boards[i] = Board{};
+			_boards_ready[i] = false;
+		}
 	}
 
 } // game

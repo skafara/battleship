@@ -7,6 +7,7 @@ import battleship.client.models.ClientState;
 import battleship.client.views.components.RoomFactory;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.collections.ListChangeListener;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -29,12 +30,12 @@ public class Board extends GridPane {
     private static final int STROKE_WIDTH = 1;
     private static final Color GRAY = Color.rgb(160, 160, 160);
 
-    public Board(ClientState clientState, Controller controller, boolean client) {
-        construct(clientState, controller, client);
+    public Board(ClientState clientState, Controller controller, boolean client, BooleanBinding isInGame) {
+        construct(clientState, controller, client, isInGame);
         repaint(clientState.getBoard());
     }
 
-    private void construct(ClientState clientState, Controller controller, boolean client) {
+    private void construct(ClientState clientState, Controller controller, boolean isClient, BooleanBinding isInGame) {
         StackPane empty = createCell();
         add(empty, 0, 0);
         for (int row = 0; row < BOARD_SIZE; row++) {
@@ -59,20 +60,20 @@ public class Board extends GridPane {
         setAlignment(Pos.CENTER);
         setMaxSize((BOARD_SIZE + 1) * CELL_SIZE, (BOARD_SIZE + 1) * CELL_SIZE);
 
-        if (client) {
-            disableProperty().bind(clientState.isOnTurnProperty());
+        if (isClient) {
+            disableProperty().bind(clientState.isBoardReadyProperty());
         }
         else {
             disableProperty().bind(Bindings.createBooleanBinding(() -> {
-                    return !clientState.isBoardReadyProperty().get() || clientState.isOnTurnProperty().get();
-            }, clientState.isBoardReadyProperty(), clientState.isOnTurnProperty()));
+                    return !isInGame.get() || clientState.isOnTurnProperty().get();
+            }, isInGame, clientState.isOnTurnProperty()));
         }
 
         clientState.getBoard().getBoard().addListener((ListChangeListener<BoardState.Field>) change -> {
             repaint(clientState.getBoard());
         });
 
-        setOnMouseClicked(e -> handleClick(e, clientState.getBoard(), controller, client));
+        setOnMouseClicked(e -> handleClick(e, clientState.getBoard(), controller, isClient));
     }
 
     private static StackPane createCell() {
