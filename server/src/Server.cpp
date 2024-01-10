@@ -114,6 +114,7 @@ bool Server::Is_Nickname_Disconnected(const std::string &nickname) const {
 }
 
 void Server::Disconnect_Client(const std::shared_ptr<game::Client> client) {
+	std::cout << "Disconnect" << std::endl;
 	const game::State &state = client->Get_State();
 	if (state == game::State::kInit || state == game::State::kIn_Lobby) {
 		client->Send_Msg(msgs::Messages::Conn_Term());
