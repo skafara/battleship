@@ -50,7 +50,7 @@ public class ClientState {
         boardState.reset();
         isBoardReady.set(false);
         isOnTurn.set(false);
-        isResponding.set(true);
+        //isResponding.set(true);
     }
 
 }

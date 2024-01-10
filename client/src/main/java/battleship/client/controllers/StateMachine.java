@@ -32,6 +32,8 @@ public class StateMachine implements Runnable {
                     case OPPONENT_NO_RESPONSE -> handler = stateMachineController::handleOpponentNoResponse;
                     case OPPONENT_TURN -> handler = stateMachineController::handleOpponentTurn;
                     case GAME_END -> handler = stateMachineController::handleGameEnd;
+                    case OPPONENT_REJOIN -> handler = stateMachineController::handleOpponentRejoin;
+                    case BOARD_STATE -> handler = stateMachineController::handleBoardState;
                     default -> {
                         System.out.println("nevyhovuje?");
                         continue;

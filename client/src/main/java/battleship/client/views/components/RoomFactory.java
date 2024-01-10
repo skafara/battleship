@@ -126,7 +126,7 @@ public class RoomFactory {
                             }
                             return "";
                         },
-                        isInGame, clientState.isBoardReadyProperty(), clientState.isOnTurnProperty()
+                        isInGame, clientState.isInRoomBinding(), clientState.isBoardReadyProperty(), clientState.isOnTurnProperty()
                 )
         );
 

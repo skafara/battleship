@@ -98,6 +98,10 @@ void Server::Destroy_Room(const std::shared_ptr<game::Room> room) {
 	_rooms.erase(std::ranges::find(_rooms, room));
 }
 
+void Server::Erase_Disconnected_Client(const std::string &nickname) {
+	_disconnected.erase(std::ranges::find(_disconnected, nickname, &game::Client::Get_Nickname));
+}
+
 bool Server::Is_Nickname_Active(const std::string &nickname) const {
 	const auto it = std::ranges::find(_clients, nickname, &game::Client::Get_Nickname);
 	return it != std::end(_clients);
@@ -160,11 +164,34 @@ void Server::Reconnect_Client(std::shared_ptr<game::Client> &client) {
 		const game::Client &opponent = room->Get_Opponent(*client);
 		opponent.Send_Msg(msgs::Messages::Opponent_Rejoin());
 
+		client->Send_Msg(msgs::Messages::Opponent_Nickname_Set(opponent.Get_Nickname()));
+		if (room->Is_Board_Ready(opponent)) {
+			client->Send_Msg(msgs::Messages::Opponent_Board_Ready());
+		}
+
 		if (room->Is_Board_Ready(*client)) {
 			opponent.Send_Msg(msgs::Messages::Board_State(msgs::Messages::Client::kOpponent, room->Get_Board(*client)));
 		}
 		if (room->Is_Board_Ready(opponent)) {
 			client->Send_Msg(msgs::Messages::Board_State(msgs::Messages::Client::kOpponent, room->Get_Board(opponent)));
+		}
+	}
+
+	if (client->Get_State() == game::State::kIn_Game) {
+		if (room->Is_On_Turn(*client)) {
+			client->Send_Msg(msgs::Messages::Turn_Set(msgs::Messages::Client::kYou));
+		}
+		else {
+			client->Send_Msg(msgs::Messages::Turn_Set(msgs::Messages::Client::kOpponent));
+		}
+
+		if (room->Is_Full()) {
+			if (room->Is_On_Turn(*client)) {
+				room->Get_Opponent(*client).Send_Msg(msgs::Messages::Turn_Set(msgs::Messages::Client::kOpponent));
+			}
+			else {
+				room->Get_Opponent(*client).Send_Msg(msgs::Messages::Turn_Set(msgs::Messages::Client::kYou));
+			}
 		}
 	}
 }

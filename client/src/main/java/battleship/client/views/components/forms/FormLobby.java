@@ -121,7 +121,7 @@ public class FormLobby extends HBox {
     private void handleRoomLimit(ReachedLimitException e) { // TODO alert factory?
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Information");
-        alert.setHeaderText(String.format("Rooms count limit (%d) reached", e.getLimit()));
+        alert.setHeaderText(String.format("Rooms Count Limit (%d) Reached", e.getLimit()));
         alert.setContentText("Please try again later.");
         alert.showAndWait();
     }
@@ -129,7 +129,7 @@ public class FormLobby extends HBox {
     private void handleRoomFull() {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
-        alert.setHeaderText("Room is full");
+        alert.setHeaderText("Room Is Full");
         alert.setContentText("Please join a not full room.");
         alert.showAndWait();
     }
@@ -137,7 +137,7 @@ public class FormLobby extends HBox {
     private void handleNotExists() {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
-        alert.setHeaderText("Room does not exist");
+        alert.setHeaderText("Room Does Not Exist");
         alert.setContentText("Check the validity of the room code.");
         alert.showAndWait();
     }

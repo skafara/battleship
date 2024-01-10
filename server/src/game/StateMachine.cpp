@@ -179,6 +179,10 @@ namespace game {
 
 			opponent.Send_Msg(msgs::Messages::Opponent_Room_Leave());
 			opponent.Set_State(State::kIn_Lobby);
+
+			if (_server.Is_Nickname_Disconnected(opponent.Get_Nickname())) {
+				_server.Erase_Disconnected_Client(opponent.Get_Nickname());
+			}
 		}
 
 		_server.Destroy_Room(room);

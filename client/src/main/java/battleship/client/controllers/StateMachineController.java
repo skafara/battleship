@@ -1,6 +1,7 @@
 package battleship.client.controllers;
 
 import battleship.client.models.BoardState;
+import battleship.client.models.ClientState;
 import battleship.client.models.Model;
 import battleship.client.views.StageManager;
 import javafx.application.Platform;
@@ -50,6 +51,12 @@ public class StateMachineController {
         if (short_) {
             model.opponentState.isRespondingProperty().set(false);
         }
+        else {
+            model.applicationState.roomCodeProperty().set("");
+            model.clientState.resetExceptNickname();
+            model.opponentState.reset();
+            Platform.runLater(() -> stageManager.setScene(StageManager.Scene.Lobby));
+        }
     }
 
     public void handleOpponentTurn(Message message) {
@@ -58,10 +65,10 @@ public class StateMachineController {
         int col = field.charAt(1) - '0';
         BoardState boardState = model.clientState.getBoard();
         if (message.getParameter(1).equals("HIT")) {
-            boardState.setField(BoardState.Field.Hit, row, col);
+            boardState.setField(BoardState.Field.HIT, row, col);
         }
         else {
-            boardState.setField(BoardState.Field.Miss, row, col);
+            boardState.setField(BoardState.Field.MISS, row, col);
         }
     }
 
@@ -85,5 +92,24 @@ public class StateMachineController {
 
             stageManager.setScene(StageManager.Scene.Room);
         });
+    }
+
+    public void handleOpponentRejoin(Message message) {
+        model.opponentState.isRespondingProperty().set(true);
+    }
+
+    public void handleBoardState(Message message) {
+        ClientState clientState = model.opponentState;
+        if (message.getParameter(0).equals("YOU")) {
+            clientState = model.clientState;
+        }
+
+        clientState.isBoardReadyProperty().set(true);
+        BoardState boardState = clientState.getBoard();
+        for (int i = 1; i < message.getParametersCnt(); i++) {
+            String fieldDescription = message.getParameter(i);
+            BoardState.Field field = BoardState.Field.valueOf(fieldDescription);
+            boardState.setField(field, i - 1);
+        }
     }
 }

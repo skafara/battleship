@@ -21,6 +21,7 @@ public:
 	virtual std::shared_ptr<game::Room> Get_Room(const std::shared_ptr<game::Client> client) const = 0;
 
 	virtual void Destroy_Room(const std::shared_ptr<game::Room> room) = 0;
+	virtual void Erase_Disconnected_Client(const std::string &nickname) = 0;
 
 	virtual bool Is_Nickname_Active(const std::string &nickname) const = 0;
 	virtual bool Is_Nickname_Disconnected(const std::string &nickname) const = 0;

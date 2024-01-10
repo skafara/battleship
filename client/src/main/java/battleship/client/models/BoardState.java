@@ -10,15 +10,15 @@ import java.util.Map;
 public class BoardState {
 
     public enum Field {
-        None,
-        Ship,
-        Hit,
-        Miss
+        NONE,
+        SHIP,
+        HIT,
+        MISS
     }
 
     public static final int SIZE = 10;
 
-    private final ObservableList<Field> board = FXCollections.observableArrayList(Collections.nCopies(SIZE * SIZE, Field.None));
+    private final ObservableList<Field> board = FXCollections.observableArrayList(Collections.nCopies(SIZE * SIZE, Field.NONE));
 
     public BoardState() {
         //
@@ -54,16 +54,20 @@ public class BoardState {
     }
 
     public boolean isShip(int row, int col) {
-        return getField(row, col) == Field.Ship;
+        return getField(row, col) == Field.SHIP;
     }
 
     public boolean isGuess(int row, int col) {
         Field field = getField(row, col);
-        return field == Field.Hit || field == Field.Miss;
+        return field == Field.HIT || field == Field.MISS;
     }
 
     public void setField(Field field, int row, int col) {
         board.set(getFieldIndex(row, col), field);
+    }
+
+    public void setField(Field field, int fieldIndex) {
+        board.set(fieldIndex, field);
     }
 
     public ObservableList<Field> getBoard() {
@@ -71,7 +75,7 @@ public class BoardState {
     }
 
     public void reset() {
-        Collections.fill(board, Field.None);
+        Collections.fill(board, Field.NONE);
     }
 
     private int getFieldIndex(int row, int col) {

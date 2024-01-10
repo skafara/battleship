@@ -1,5 +1,7 @@
 package battleship.client.controllers;
 
+import battleship.client.models.BoardState;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,6 +16,7 @@ public class Message {
         ACK,
         LIMIT_CLIENTS,
         NICKNAME_SET,
+        NICKNAME_EXISTS,
         ROOM_CREATE,
         ROOM_CREATED,
         LIMIT_ROOMS,
@@ -34,7 +37,10 @@ public class Message {
         TURN_ILLEGAL,
         TURN_NOT_YOU,
         OPPONENT_TURN,
-        GAME_END
+        GAME_END,
+        REJOIN,
+        OPPONENT_REJOIN,
+        BOARD_STATE
     }
 
     private static final Map<Type, Integer> PARAMETERS_COUNTS = Map.ofEntries(
@@ -42,6 +48,7 @@ public class Message {
             Map.entry(Type.CONN_TERM, 0),
             Map.entry(Type.LIMIT_CLIENTS, 1),
             Map.entry(Type.ACK, 0),
+            Map.entry(Type.NICKNAME_EXISTS, 0),
             Map.entry(Type.ROOM_CREATED, 1),
             Map.entry(Type.LIMIT_ROOMS, 1),
             Map.entry(Type.ROOM_FULL, 0),
@@ -57,7 +64,10 @@ public class Message {
             Map.entry(Type.TURN_ILLEGAL, 0),
             Map.entry(Type.TURN_NOT_YOU, 0),
             Map.entry(Type.OPPONENT_TURN, 2),
-            Map.entry(Type.GAME_END, 1)
+            Map.entry(Type.GAME_END, 1),
+            Map.entry(Type.REJOIN, 2),
+            Map.entry(Type.OPPONENT_REJOIN, 0),
+            Map.entry(Type.BOARD_STATE, 1 + BoardState.SIZE * BoardState.SIZE)
     );
 
     private final Type type;
@@ -77,6 +87,10 @@ public class Message {
 
     public String getParameter(int idx) {
         return parameters.get(idx);
+    }
+
+    public int getParametersCnt() {
+        return parameters.size();
     }
 
     public String Serialize() {

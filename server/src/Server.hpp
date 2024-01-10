@@ -26,6 +26,7 @@ public:
 	std::shared_ptr<game::Room> Get_Room(const std::shared_ptr<game::Client> client) const override; // lock
 
 	void Destroy_Room(const std::shared_ptr<game::Room> room) override;
+	void Erase_Disconnected_Client(const std::string &nickname) override;
 
 	bool Is_Nickname_Active(const std::string &nickname) const override;
 	bool Is_Nickname_Disconnected(const std::string &nickname) const override;

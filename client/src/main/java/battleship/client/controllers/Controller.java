@@ -1,11 +1,12 @@
 package battleship.client.controllers;
 
+import battleship.client.controllers.exceptions.ExistsException;
 import battleship.client.controllers.exceptions.NotExistsException;
 import battleship.client.controllers.exceptions.ReachedLimitException;
 import battleship.client.models.BoardState;
 import battleship.client.models.Model;
-import battleship.client.views.Board;
 import battleship.client.views.StageManager;
+import javafx.application.Platform;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -63,15 +64,19 @@ public class Controller {
                         future.completeExceptionally(new ReachedLimitException(Integer.parseInt(welcomeMessage.getParameter(0))));
                     }
 
-                    CompletableFuture<Message> responseFuture = expectMessage(Message.Type.ACK); // TODO rejoin
+                    CompletableFuture<Message> responseFuture = expectMessage(Message.Type.ACK, Message.Type.NICKNAME_EXISTS, Message.Type.REJOIN);
                     sendMessage(new Message(Message.Type.NICKNAME_SET, nickname));
 
                     Message message = responseFuture.get();
                     if (message.getType() == Message.Type.ACK) {
-                        // nic
+                        Platform.runLater(() -> stageManager.setScene(StageManager.Scene.Lobby));
+                    }
+                    else if (message.getType() == Message.Type.NICKNAME_EXISTS) {
+                        future.completeExceptionally(new ExistsException());
                     }
                     else {
-                        // rejoin
+                        model.applicationState.roomCodeProperty().set(message.getParameter(1));
+                        Platform.runLater(() -> stageManager.setScene(StageManager.Scene.Room));
                     }
 
                     new Thread(stateMachine).start();
@@ -225,10 +230,10 @@ public class Controller {
 
                 if (response.getType() == Message.Type.TURN_RESULT) {
                     if (response.getParameter(1).equals("HIT")) {
-                        model.opponentState.getBoard().setField(BoardState.Field.Hit, row, col);
+                        model.opponentState.getBoard().setField(BoardState.Field.HIT, row, col);
                     }
                     else {
-                        model.opponentState.getBoard().setField(BoardState.Field.Miss, row, col);
+                        model.opponentState.getBoard().setField(BoardState.Field.MISS, row, col);
                     }
                     future.complete(null);
                 }

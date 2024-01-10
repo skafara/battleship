@@ -1,6 +1,7 @@
 package battleship.client.views.components.forms;
 
 import battleship.client.controllers.Controller;
+import battleship.client.controllers.exceptions.ExistsException;
 import battleship.client.controllers.exceptions.ReachedLimitException;
 import battleship.client.models.ApplicationState;
 import battleship.client.views.StageManager;
@@ -53,12 +54,12 @@ public class FormConnect extends VBox {
 
         future.whenCompleteAsync((value, exception) -> {
             if (exception == null) {
-                Platform.runLater(() -> controller.getStageManager().setScene(StageManager.Scene.Lobby));
                 applicationState.buttonConnectDisableProperty().set(false);
                 return;
             }
 
             switch (exception) {
+                case ExistsException e -> Platform.runLater(this::handleNicknameExists);
                 case ReachedLimitException e -> Platform.runLater(() -> handleLimit(e));
                 case IllegalArgumentException e -> Platform.runLater(this::handleIllegalArgument);
                 case UnknownHostException e -> Platform.runLater(this::handleUnknownHost);
@@ -73,10 +74,18 @@ public class FormConnect extends VBox {
         });
     }
 
+    private void handleNicknameExists() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Information");
+        alert.setHeaderText("Nickname Exists");
+        alert.setContentText("Please use different nickname.");
+        alert.showAndWait();
+    }
+
     private void handleLimit(ReachedLimitException e) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Information");
-        alert.setHeaderText(String.format("Clients count limit (%d) reached", e.getLimit()));
+        alert.setHeaderText(String.format("Clients Count Limit (%d) Reached", e.getLimit()));
         alert.setContentText("Please try again later.");
         alert.showAndWait();
     }
@@ -100,7 +109,7 @@ public class FormConnect extends VBox {
     private void handleSocketTimeout() {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error");
-        alert.setHeaderText("Timed out connecting");
+        alert.setHeaderText("Timed Out Connecting");
         alert.setContentText("Check the validity of the server address and port and try again.");
         alert.showAndWait();
     }

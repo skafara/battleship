@@ -1,10 +1,8 @@
 package battleship.client.views;
 
 import battleship.client.controllers.Controller;
-import battleship.client.models.ApplicationState;
 import battleship.client.models.BoardState;
 import battleship.client.models.ClientState;
-import battleship.client.views.components.RoomFactory;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -112,15 +110,15 @@ public class Board extends GridPane {
                 Text text = getText(cell);
 
                 switch (field) {
-                    case None -> rectangle.setFill(Color.TRANSPARENT);
-                    case Ship -> rectangle.setFill(GRAY);
-                    case Hit -> {
+                    case NONE -> rectangle.setFill(Color.TRANSPARENT);
+                    case SHIP -> rectangle.setFill(GRAY);
+                    case HIT -> {
                         rectangle.setFill(GRAY);
                         rectangle.setStroke(Color.RED);
                         text.setText("X");
                         text.setFill(Color.RED);
                     }
-                    case Miss -> {
+                    case MISS -> {
                         rectangle.setFill(Color.TRANSPARENT);
                         text.setText("•");
                     }
@@ -139,9 +137,9 @@ public class Board extends GridPane {
 
         if (client) {
             if (!boardState.isShip(row, col)) {
-                boardState.setField(BoardState.Field.Ship, row, col);
+                boardState.setField(BoardState.Field.SHIP, row, col);
             } else {
-                boardState.setField(BoardState.Field.None, row, col);
+                boardState.setField(BoardState.Field.NONE, row, col);
             }
         } else {
             handleTurn(row, col, controller);
