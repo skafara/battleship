@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <functional>
 
 #include "../msgs/Message.hpp"
 #include "../I_ServerOps.hpp"
