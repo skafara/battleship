@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <map>
+#include <algorithm>
 
 
 namespace game {
