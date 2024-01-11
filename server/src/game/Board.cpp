@@ -12,8 +12,8 @@ namespace game {
 	}
 
 	bool Board::Is_Valid() const {
-		//std::map<size_t, size_t> ships_sizes_cnts{{1, 4}, {2, 3}, {3, 2}, {4, 1}};
-		std::map<size_t, size_t> ships_sizes_cnts{{1, 2}};
+		std::map<size_t, size_t> ships_sizes_cnts{{1, 4}, {2, 3}, {3, 2}, {4, 1}};
+		//std::map<size_t, size_t> ships_sizes_cnts{{1, 2}};
 		std::array<bool, kSize * kSize> visited{};
 
 		const auto Process_Ship = [this, &visited, &ships_sizes_cnts](size_t row, size_t col) -> bool {

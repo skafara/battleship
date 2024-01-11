@@ -26,8 +26,14 @@ public class BoardState {
 
     public boolean isValid() {
 //std::map<size_t, size_t> ships_sizes_cnts{{1, 4}, {2, 3}, {3, 2}, {4, 1}};
-        Map<Integer, Integer> shipsSizesCnts = new HashMap<>(Map.of(
+        /*Map<Integer, Integer> shipsSizesCnts = new HashMap<>(Map.of(
                 1, 2
+        ));*/
+        Map<Integer, Integer> shipsSizesCnts = new HashMap<>(Map.of(
+                1, 4,
+                2, 3,
+                3, 2,
+                4, 1
         ));
         boolean[] isVisited = new boolean[SIZE * SIZE];
 
