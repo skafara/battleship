@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public class KeepAlive implements Runnable {
 
-    private static final int INTERVAL_MS = 1000;
+    private static final int INTERVAL_MS = 5000;
 
     private final Communicator communicator;
 

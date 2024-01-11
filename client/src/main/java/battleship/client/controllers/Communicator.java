@@ -5,7 +5,7 @@ import java.net.Socket;
 
 public class Communicator {
 
-    public final Object READ_ACCESS = new Object();
+    private final Object WRITE_ACCESS = new Object();
 
     private final BufferedReader bufferedReader;
     private final BufferedWriter bufferedWriter;
@@ -46,15 +46,17 @@ public class Communicator {
     public void send(Message message) throws IOException {
         String text = message.Serialize();
 
-        for (int i = 0; i < text.length(); i++) {
-            char c = text.charAt(i);
-            if (c == '\\' || c == 0x0A) {
-                bufferedWriter.write('\\');
+        synchronized (WRITE_ACCESS) {
+            for (int i = 0; i < text.length(); i++) {
+                char c = text.charAt(i);
+                if (c == '\\' || c == 0x0A) {
+                    bufferedWriter.write('\\');
+                }
+                bufferedWriter.write(c);
             }
-            bufferedWriter.write(c);
+            bufferedWriter.write(0x0A);
+            bufferedWriter.flush();
         }
-        bufferedWriter.write(0x0A);
-        bufferedWriter.flush();
     }
 
 }

@@ -6,7 +6,6 @@ import battleship.client.controllers.exceptions.ReachedLimitException;
 import battleship.client.models.BoardState;
 import battleship.client.models.Model;
 import battleship.client.views.StageManager;
-import javafx.application.Platform;
 import javafx.scene.control.Alert;
 
 import java.io.*;
@@ -21,6 +20,7 @@ import java.util.concurrent.TimeoutException;
 
 public class Controller {
 
+    private static final int RECEIVE_MSG_TIMEOUT_MS = 15000;
     private static final int SOCKET_CONNECTION_TIMEOUT_MS = 10000;
     private static final int ROOM_CODE_LENGTH = 4;
 
@@ -58,6 +58,8 @@ public class Controller {
                     stateMachine = new StateMachine(new StateMachineController(model, stageManager));
                     messagesManager = new MessagesManager(communicator, stateMachine);
 
+                    new Thread(new KeepAlive(communicator)).start();
+
                     CompletableFuture<Message> welcomeFuture = expectMessage(Message.Type.WELCOME, Message.Type.LIMIT_CLIENTS);
                     new Thread(messagesManager).start();
                     Message welcomeMessage = awaitMessage(welcomeFuture);
@@ -79,8 +81,6 @@ public class Controller {
                         model.applicationState.roomCodeProperty().set(message.getParameter(1));
                         stageManager.setSceneLater(StageManager.Scene.Room);
                     }
-
-                    //new Thread(new KeepAlive(communicator)).start();
 
                     model.clientState.isRespondingProperty().set(true);
                     new Thread(stateMachine).start();
@@ -325,8 +325,8 @@ public class Controller {
 
     private Message awaitMessage(CompletableFuture<Message> future) throws TimeoutException, IOException {
         try {
-            Message message = future.get(5, TimeUnit.SECONDS);
-            System.out.println("Response From Server: " + message);
+            Message message = future.get(RECEIVE_MSG_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            System.out.println("Recv From Server: " + message.Serialize());
             return message;
         } catch (ExecutionException | InterruptedException e) {
             if (e.getCause() instanceof IOException) {
