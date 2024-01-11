@@ -18,7 +18,7 @@ public class StateMachine implements Runnable {
         try {
             for (;;) {
                 Message msg = messages.take();
-                System.out.println("StateMachine To Process: " + msg.Serialize());
+                System.out.println("StateMachine: " + msg.Serialize());
 
                 Consumer<Message> handler;
                 switch (msg.getType()) {

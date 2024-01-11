@@ -303,7 +303,7 @@ public class Controller {
     }
 
     public void sendMessage(Message message) throws IOException {
-        System.out.println(message.Serialize());
+        System.out.println("Send To Server: " + message.Serialize());
         communicator.send(message);
     }
 
@@ -325,7 +325,9 @@ public class Controller {
 
     private Message awaitMessage(CompletableFuture<Message> future) throws TimeoutException, IOException {
         try {
-            return future.get(5, TimeUnit.SECONDS);
+            Message message = future.get(5, TimeUnit.SECONDS);
+            System.out.println("Response From Server: " + message);
+            return message;
         } catch (ExecutionException | InterruptedException e) {
             if (e.getCause() instanceof IOException) {
                 throw new IOException();
