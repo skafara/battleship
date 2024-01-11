@@ -303,6 +303,7 @@ public class Controller {
     }
 
     public void sendMessage(Message message) throws IOException {
+        System.out.println(message.Serialize());
         communicator.send(message);
     }
 
