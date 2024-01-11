@@ -22,12 +22,12 @@ namespace msgs {
 		const std::string text = msg.Serialize();
 
 		for (char c : text) {
-			if (c == '\\' || c == '\n') {
+			if (c == '\\' || c == 0x0A) {
 				sock.Write_Byte(static_cast<std::byte>('\\'));
 			}
 			sock.Write_Byte(static_cast<std::byte>(c));
 		}
-		sock.Write_Byte(static_cast<std::byte>('\n'));
+		sock.Write_Byte(static_cast<std::byte>(0x0A));
 	}
 
 	Message Communicator::Recv(const ntwrk::Socket &sock) {
@@ -43,7 +43,7 @@ namespace msgs {
 					continue;
 				}
 
-				if (c == '\n') {
+				if (c == 0x0A) {
 					break;
 				}
 			}

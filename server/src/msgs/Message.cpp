@@ -3,7 +3,7 @@
 #include <sstream>
 #include <regex>
 
-
+#include "iostream"
 namespace msgs {
 
 	MessageType Message::Get_Type() const {
@@ -33,6 +33,7 @@ namespace msgs {
 
 	Message Message::Deserialize(const std::string &str) {
 		std::istringstream isstream{str};
+		std::cout << "Deserialize: " << str << std::endl;
 
 		std::string type_str;
 		std::getline(isstream, type_str, '|');

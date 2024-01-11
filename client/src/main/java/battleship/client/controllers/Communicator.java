@@ -31,7 +31,7 @@ public class Communicator {
                     continue;
                 }
 
-                if (c == '\n') {
+                if (c == 0x0A) {
                     break;
                 }
             }
@@ -48,7 +48,7 @@ public class Communicator {
 
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
-            if (c == '\\' || c == '\n') {
+            if (c == '\\' || c == 0x0A) {
                 bufferedWriter.write('\\');
             }
             bufferedWriter.write(c);
