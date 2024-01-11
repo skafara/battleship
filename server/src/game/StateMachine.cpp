@@ -48,6 +48,7 @@ namespace game {
 			try {
 				const msgs::Message msg = Await_Msg();
 
+				std::cout << "lck" << std::endl;
 				std::lock_guard lck{_server.Get_Mutex()};
 
 				if (!kExpected_Msgs.at(_client->Get_State()).contains(msg.Get_Type())) {
