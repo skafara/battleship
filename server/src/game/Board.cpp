@@ -7,14 +7,16 @@
 
 namespace game {
 
+	const std::map<size_t, size_t> Board::kShips_Sizes_Cnts = Is_Debug ?
+			std::map<size_t, size_t>{{1, 2}} : std::map<size_t, size_t>{{1, 4}, {2, 3}, {3, 2}, {4, 1}};
+
 	void Board::Set_Ship(size_t row, size_t col) {
 		_ships[Get_Field_Idx(row, col)] = true;
 	}
 
 	bool Board::Is_Valid() const {
-		std::map<size_t, size_t> ships_sizes_cnts{{1, 4}, {2, 3}, {3, 2}, {4, 1}};
-		//std::map<size_t, size_t> ships_sizes_cnts{{1, 2}};
 		std::array<bool, kSize * kSize> visited{};
+		std::map<size_t, size_t> ships_sizes_cnts = kShips_Sizes_Cnts;
 
 		const auto Process_Ship = [this, &visited, &ships_sizes_cnts](size_t row, size_t col) -> bool {
 			// Check corners for diagonal overlapping

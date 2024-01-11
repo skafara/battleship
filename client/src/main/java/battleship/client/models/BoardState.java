@@ -18,6 +18,16 @@ public class BoardState {
 
     public static final int SIZE = 10;
 
+    private static final boolean IS_DEBUG = true;
+    private static final Map<Integer, Integer> SHIPS_SIZES_CNTS = IS_DEBUG ? Map.of(
+            1, 2
+    ) : Map.of(
+            1, 4,
+            2, 3,
+            3, 2,
+            4, 1
+    );
+
     private final ObservableList<Field> board = FXCollections.observableArrayList(Collections.nCopies(SIZE * SIZE, Field.NONE));
 
     public BoardState() {
@@ -25,16 +35,7 @@ public class BoardState {
     }
 
     public boolean isValid() {
-//std::map<size_t, size_t> ships_sizes_cnts{{1, 4}, {2, 3}, {3, 2}, {4, 1}};
-        /*Map<Integer, Integer> shipsSizesCnts = new HashMap<>(Map.of(
-                1, 2
-        ));*/
-        Map<Integer, Integer> shipsSizesCnts = new HashMap<>(Map.of(
-                1, 4,
-                2, 3,
-                3, 2,
-                4, 1
-        ));
+        Map<Integer, Integer> shipsSizesCnts = new HashMap<>(SHIPS_SIZES_CNTS);
         boolean[] isVisited = new boolean[SIZE * SIZE];
 
         for (int row = 0; row < SIZE; row++) {
@@ -84,7 +85,7 @@ public class BoardState {
         Collections.fill(board, Field.NONE);
     }
 
-    private int getFieldIndex(int row, int col) {
+    private static int getFieldIndex(int row, int col) {
         return SIZE * row + col;
     }
 
