@@ -146,15 +146,6 @@ public class RoomFactory {
                 return;
             }
 
-            switch (exception) {
-                /*case IOException e -> {
-                    Platform.runLater(() -> handleIO(e));
-                }*/
-                default -> {
-                    //
-                }
-            }
-
             applicationState.roomDisableProperty().set(false);
         });
     }
@@ -172,15 +163,17 @@ public class RoomFactory {
             }
 
             StageManager stageManager = controller.getStageManager();
-            switch (exception) {
-                case IllegalArgumentException e -> handleIllegalBoard(stageManager);
-                case IllegalStateException e -> handleNotYourTurn(stageManager);
-                /*case IOException e -> {
-                    Platform.runLater(() -> handleIO(e));
-                }*/
-                default -> {
-                    //
-                }
+            try {
+                throw exception;
+            }
+            catch (IllegalArgumentException e) {
+                handleIllegalBoard(stageManager);
+            }
+            catch (IllegalStateException e) {
+                handleNotYourTurn(stageManager);
+            }
+            catch (Throwable e) {
+                //
             }
 
             applicationState.roomDisableProperty().set(false);

@@ -77,12 +77,17 @@ public class FormLobby extends HBox {
             }
 
             StageManager stageManager = controller.getStageManager();
-            switch (exception) {
-                case ReachedLimitException e -> handleRoomFull(stageManager);
-                case NotExistsException e -> handleNotExists(stageManager);
-                default -> {
-                    //
-                }
+            try {
+                throw exception;
+            }
+            catch (ReachedLimitException e) {
+                handleRoomFull(stageManager);
+            }
+            catch (NotExistsException e) {
+                handleNotExists(stageManager);
+            }
+            catch (Throwable e) {
+                //
             }
 
             applicationState.lobbyDisableProperty().set(false);
@@ -101,14 +106,14 @@ public class FormLobby extends HBox {
             }
 
             StageManager stageManager = controller.getStageManager();
-            switch (exception) {
-                case ReachedLimitException e -> handleRoomLimit(stageManager, e);
-                /*case IOException e -> {
-                    Platform.runLater(() -> handleIO(e));
-                }*/
-                default -> {
-                    //
-                }
+            try {
+                throw exception;
+            }
+            catch (ReachedLimitException e) {
+                handleRoomLimit(stageManager, e);
+            }
+            catch (Throwable e) {
+                //
             }
 
             applicationState.lobbyDisableProperty().set(false);

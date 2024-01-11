@@ -68,16 +68,29 @@ public class FormConnect extends VBox {
             }
 
             StageManager stageManager = controller.getStageManager();
-            switch (exception) {
-                case ExistsException e -> handleNicknameExists(stageManager);
-                case ReachedLimitException e -> handleLimit(stageManager, e);
-                case IllegalArgumentException e -> handleIllegalArgument(stageManager);
-                case UnknownHostException e -> handleUnknownHost(stageManager);
-                case SocketTimeoutException e -> handleSocketTimeout(stageManager);
-                case IOException e -> handleIO(stageManager, e);
-                default -> {
-                    //
-                }
+            try {
+                throw exception;
+            }
+            catch (ExistsException e) {
+                handleNicknameExists(stageManager);
+            }
+            catch (ReachedLimitException e) {
+                handleLimit(stageManager, e);
+            }
+            catch (IllegalArgumentException e) {
+                handleIllegalArgument(stageManager);
+            }
+            catch (UnknownHostException e) {
+                handleUnknownHost(stageManager);
+            }
+            catch (SocketTimeoutException e) {
+                handleSocketTimeout(stageManager);
+            }
+            catch (IOException e) {
+                handleIO(stageManager, e);
+            }
+            catch (Throwable e) {
+                //
             }
 
             applicationState.indexDisableProperty().set(false);

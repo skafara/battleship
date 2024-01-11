@@ -161,14 +161,14 @@ public class Board extends GridPane {
             }
 
             StageManager stageManager = controller.getStageManager();
-            switch (exception) {
-                case IllegalArgumentException e -> handleIllegalTurn(stageManager);
-                /*case IOException e -> {
-                    Platform.runLater(() -> handleIO(e));
-                }*/
-                default -> {
-                    //
-                }
+            try {
+                throw exception;
+            }
+            catch (IllegalArgumentException e) {
+                handleIllegalTurn(stageManager);
+            }
+            catch (Throwable e) {
+                //
             }
 
             applicationState.roomDisableProperty().set(false);
