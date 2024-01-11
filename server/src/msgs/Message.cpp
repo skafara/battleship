@@ -41,6 +41,7 @@ namespace msgs {
 		const auto it_msg_type = std::ranges::find_if(kMessageType_String, [&type_str](const auto &pair) -> bool {
 			return pair.second == type_str;
 		});
+		std::cout << (it_msg_type == std::end(kMessageType_String)) << str << std::endl;
 		if (it_msg_type == std::end(kMessageType_String)) {
 			throw IllegalMessageException{"Unknown Message Type"};
 		}
