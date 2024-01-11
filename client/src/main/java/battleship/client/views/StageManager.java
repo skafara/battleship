@@ -5,7 +5,9 @@ import battleship.client.models.Model;
 import battleship.client.views.scenes.Index;
 import battleship.client.views.scenes.Lobby;
 import battleship.client.views.scenes.Room;
+import javafx.application.Platform;
 import javafx.scene.Parent;
+import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 
 public class StageManager {
@@ -46,6 +48,29 @@ public class StageManager {
         }
 
         stage.setScene(new javafx.scene.Scene(parent, MIN_WIDTH, MIN_HEIGHT));
+    }
+
+    public void setSceneLater(Scene scene) {
+        Platform.runLater(() -> setScene(scene));
+    }
+
+    public void showAlert(Alert.AlertType type, String header, String content) {
+        String typeText = "";
+        if (type == Alert.AlertType.ERROR) {
+            typeText = "Error";
+        } else if (type == Alert.AlertType.INFORMATION) {
+            typeText = "Information";
+        }
+
+        Alert alert = new Alert(type);
+        alert.setTitle(typeText);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
+    public void showAlertLater(Alert.AlertType type, String header, String content) {
+        Platform.runLater(() -> showAlert(type, header, content));
     }
 
     public void showStage() {

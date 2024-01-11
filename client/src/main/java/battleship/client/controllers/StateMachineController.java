@@ -18,7 +18,9 @@ public class StateMachineController {
     }
 
     public void handleConnTerm(Message message) {
-        System.out.println(message.Serialize());
+        //System.out.println(message.Serialize());
+        stageManager.showAlertLater(Alert.AlertType.ERROR, "Connection Terminated", "Server has terminated the connection. Please connect to the server again.");
+        stageManager.setSceneLater(StageManager.Scene.Index);
     }
 
     public void handleOpponentNicknameSet(Message message) {
@@ -33,11 +35,12 @@ public class StateMachineController {
         model.applicationState.roomCodeProperty().set("");
         model.clientState.resetExceptNickname();
         model.opponentState.reset();
-        Platform.runLater(() -> stageManager.setScene(StageManager.Scene.Lobby));
+        stageManager.showAlertLater(Alert.AlertType.INFORMATION, "Opponent Left Room", "Your opponent has left the room.");
+        stageManager.setSceneLater(StageManager.Scene.Lobby);
     }
 
     public void handleGameBegin(Message message) {
-        System.out.println("game begin");
+        //System.out.println("game begin");
     }
 
     public void handleTurnSet(Message message) {
@@ -55,7 +58,8 @@ public class StateMachineController {
             model.applicationState.roomCodeProperty().set("");
             model.clientState.resetExceptNickname();
             model.opponentState.reset();
-            Platform.runLater(() -> stageManager.setScene(StageManager.Scene.Lobby));
+            stageManager.showAlertLater(Alert.AlertType.INFORMATION, "Opponent Not Responding", "Your opponent has been disconnected for not responding to the server for a long time.");
+            stageManager.setSceneLater(StageManager.Scene.Lobby);
         }
     }
 
@@ -75,23 +79,11 @@ public class StateMachineController {
     public void handleGameEnd(Message message) {
         boolean isWinner = message.getParameter(0).equals("YOU");
 
-        Platform.runLater(() -> {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Information");
-            alert.setHeaderText("Game End");
-            if (isWinner) {
-                alert.setContentText("You have won.");
-            }
-            else {
-                alert.setContentText("You have lost.");
-            }
-            alert.showAndWait();
-
-            model.clientState.resetExceptNickname();
-            model.opponentState.resetExceptNickname();
-
-            stageManager.setScene(StageManager.Scene.Room);
-        });
+        model.clientState.resetExceptNickname();
+        model.opponentState.resetExceptNickname();
+        String alertContent = isWinner ? "You have won." : "You have lost.";
+        stageManager.showAlertLater(Alert.AlertType.INFORMATION, "Game End", alertContent);
+        stageManager.setSceneLater(StageManager.Scene.Room);
     }
 
     public void handleOpponentRejoin(Message message) {

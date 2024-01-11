@@ -69,14 +69,14 @@ public class Controller {
 
                     Message message = responseFuture.get();
                     if (message.getType() == Message.Type.ACK) {
-                        Platform.runLater(() -> stageManager.setScene(StageManager.Scene.Lobby));
+                        stageManager.setSceneLater(StageManager.Scene.Lobby);
                     }
                     else if (message.getType() == Message.Type.NICKNAME_EXISTS) {
                         future.completeExceptionally(new ExistsException());
                     }
                     else {
                         model.applicationState.roomCodeProperty().set(message.getParameter(1));
-                        Platform.runLater(() -> stageManager.setScene(StageManager.Scene.Room));
+                        stageManager.setSceneLater(StageManager.Scene.Room);
                     }
 
                     new Thread(stateMachine).start();
@@ -135,6 +135,7 @@ public class Controller {
             return future;
         }
 
+        model.opponentState.isRespondingProperty().set(true);
         new Thread(() -> {
             CompletableFuture<Message> responseFuture = expectMessage(Message.Type.ACK, Message.Type.ROOM_FULL, Message.Type.ROOM_NOT_EXISTS);
             try {

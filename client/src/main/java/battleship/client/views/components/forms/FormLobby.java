@@ -69,17 +69,17 @@ public class FormLobby extends HBox {
         applicationState.lobbyDisableProperty().set(true);
 
         CompletableFuture<Void> future = controller.joinRoom(applicationState.roomCodeProperty().get());
-
         future.whenCompleteAsync((value, exception) -> {
             if (exception == null) {
-                Platform.runLater(() -> controller.getStageManager().setScene(StageManager.Scene.Room));
                 applicationState.lobbyDisableProperty().set(false);
+                controller.getStageManager().setSceneLater(StageManager.Scene.Room);
                 return;
             }
 
+            StageManager stageManager = controller.getStageManager();
             switch (exception) {
-                case ReachedLimitException e -> Platform.runLater(this::handleRoomFull);
-                case NotExistsException e -> Platform.runLater(this::handleNotExists);
+                case ReachedLimitException e -> handleRoomFull(stageManager);
+                case NotExistsException e -> handleNotExists(stageManager);
                 /*case IOException e -> {
                     Platform.runLater(() -> handleIO(e));
                 }*/
@@ -96,16 +96,16 @@ public class FormLobby extends HBox {
         applicationState.lobbyDisableProperty().set(true);
 
         CompletableFuture<Void> future = controller.createRoom();
-
         future.whenCompleteAsync((value, exception) -> {
             if (exception == null) {
-                Platform.runLater(() -> controller.getStageManager().setScene(StageManager.Scene.Room));
+                controller.getStageManager().setSceneLater(StageManager.Scene.Room);
                 applicationState.lobbyDisableProperty().set(false);
                 return;
             }
 
+            StageManager stageManager = controller.getStageManager();
             switch (exception) {
-                case ReachedLimitException e -> Platform.runLater(() -> handleRoomLimit(e));
+                case ReachedLimitException e -> handleRoomLimit(stageManager, e);
                 /*case IOException e -> {
                     Platform.runLater(() -> handleIO(e));
                 }*/
@@ -118,28 +118,16 @@ public class FormLobby extends HBox {
         });
     }
 
-    private void handleRoomLimit(ReachedLimitException e) { // TODO alert factory?
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Information");
-        alert.setHeaderText(String.format("Rooms Count Limit (%d) Reached", e.getLimit()));
-        alert.setContentText("Please try again later.");
-        alert.showAndWait();
+    private void handleRoomLimit(StageManager stageManager, ReachedLimitException e) {
+        stageManager.showAlertLater(Alert.AlertType.INFORMATION, String.format("Rooms Count Limit (%d) Reached", e.getLimit()), "Please try again later.");
     }
 
-    private void handleRoomFull() {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText("Room Is Full");
-        alert.setContentText("Please join a not full room.");
-        alert.showAndWait();
+    private void handleRoomFull(StageManager stageManager) {
+        stageManager.showAlertLater(Alert.AlertType.ERROR, "Room Is Full", "Please join a not full room.");
     }
 
-    private void handleNotExists() {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText("Room Does Not Exist");
-        alert.setContentText("Check the validity of the room code.");
-        alert.showAndWait();
+    private void handleNotExists(StageManager stageManager) {
+        stageManager.showAlertLater(Alert.AlertType.ERROR, "Room Does Not Exist", "Check the validity of the room code.");
     }
 
 }

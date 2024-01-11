@@ -29,22 +29,31 @@ public class FormConnect extends VBox {
         setMaxWidth(MAX_WIDTH);
         setAlignment(Pos.CENTER);
 
+        FormInputField fieldAddress = FormFactory.getBidirectionalyBoundFormInputField("Server Address", applicationState.serverAddressProperty());
+        fieldAddress.disableProperty().bind(applicationState.indexDisableProperty());
+
+        FormInputField fieldPort = FormFactory.getBidirectionalyBoundFormInputField("Server Port", applicationState.serverPortProperty());
+        fieldPort.disableProperty().bind(applicationState.indexDisableProperty());
+
+        FormInputField fieldNickname = FormFactory.getBidirectionalyBoundFormInputField("Nickname", applicationState.nicknameProperty());
+        fieldNickname.disableProperty().bind(applicationState.indexDisableProperty());
+
         getChildren().addAll(
-                FormFactory.getBidirectionalyBoundFormInputField("Server Address", applicationState.serverAddressProperty()),
-                FormFactory.getBidirectionalyBoundFormInputField("Server Port", applicationState.serverPortProperty()),
-                FormFactory.getBidirectionalyBoundFormInputField("Nickname", applicationState.nicknameProperty()),
+                fieldAddress,
+                fieldPort,
+                fieldNickname,
                 constructButton(applicationState, controller)
         );
     }
 
     private Button constructButton(ApplicationState applicationState, Controller controller) {
         Button button = FormFactory.getButton("Connect", (e) -> handleButtonConnect(applicationState, controller));
-        button.disableProperty().bind(applicationState.buttonConnectDisableProperty());
+        button.disableProperty().bind(applicationState.indexDisableProperty());
         return button;
     }
 
     private void handleButtonConnect(ApplicationState applicationState, Controller controller) {
-        applicationState.buttonConnectDisableProperty().set(true);
+        applicationState.indexDisableProperty().set(true);
 
         CompletableFuture<Void> future = controller.connect(
                 applicationState.serverAddressProperty().get(),
@@ -54,71 +63,48 @@ public class FormConnect extends VBox {
 
         future.whenCompleteAsync((value, exception) -> {
             if (exception == null) {
-                applicationState.buttonConnectDisableProperty().set(false);
+                applicationState.indexDisableProperty().set(false);
                 return;
             }
 
+            StageManager stageManager = controller.getStageManager();
             switch (exception) {
-                case ExistsException e -> Platform.runLater(this::handleNicknameExists);
-                case ReachedLimitException e -> Platform.runLater(() -> handleLimit(e));
-                case IllegalArgumentException e -> Platform.runLater(this::handleIllegalArgument);
-                case UnknownHostException e -> Platform.runLater(this::handleUnknownHost);
-                case SocketTimeoutException e -> Platform.runLater(this::handleSocketTimeout);
-                case IOException e -> Platform.runLater(() -> handleIO(e));
+                case ExistsException e -> handleNicknameExists(stageManager);
+                case ReachedLimitException e -> handleLimit(stageManager, e);
+                case IllegalArgumentException e -> handleIllegalArgument(stageManager);
+                case UnknownHostException e -> handleUnknownHost(stageManager);
+                case SocketTimeoutException e -> handleSocketTimeout(stageManager);
+                case IOException e -> handleIO(stageManager, e);
                 default -> {
                     //
                 }
             }
 
-            applicationState.buttonConnectDisableProperty().set(false);
+            applicationState.indexDisableProperty().set(false);
         });
     }
 
-    private void handleNicknameExists() {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Information");
-        alert.setHeaderText("Nickname Exists");
-        alert.setContentText("Please use different nickname.");
-        alert.showAndWait();
+    private void handleNicknameExists(StageManager stageManager) {
+        stageManager.showAlertLater(Alert.AlertType.INFORMATION, "Nickname Exists", "Please use different nickname.");
     }
 
-    private void handleLimit(ReachedLimitException e) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Information");
-        alert.setHeaderText(String.format("Clients Count Limit (%d) Reached", e.getLimit()));
-        alert.setContentText("Please try again later.");
-        alert.showAndWait();
+    private void handleLimit(StageManager stageManager, ReachedLimitException e) {
+        stageManager.showAlertLater(Alert.AlertType.INFORMATION, String.format("Clients Count Limit (%d) Reached", e.getLimit()), "Please try again later.");
     }
 
-    private void handleIllegalArgument() { // TODO alert factory?
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText("Invalid Input");
-        alert.setContentText("Check the validity of the server address and port.");
-        alert.showAndWait();
+    private void handleIllegalArgument(StageManager stageManager) {
+        stageManager.showAlertLater(Alert.AlertType.ERROR, "Invalid Input", "Check the validity of the server address and port.");
     }
 
-    private void handleUnknownHost() {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText("Unknown Host");
-        alert.setContentText("Check the validity of the server address.");
-        alert.showAndWait();
+    private void handleUnknownHost(StageManager stageManager) {
+        stageManager.showAlertLater(Alert.AlertType.ERROR, "Unknown Host", "Check the validity of the server address.");
     }
 
-    private void handleSocketTimeout() {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText("Timed Out Connecting");
-        alert.setContentText("Check the validity of the server address and port and try again.");
-        alert.showAndWait();
+    private void handleSocketTimeout(StageManager stageManager) {
+        stageManager.showAlertLater(Alert.AlertType.ERROR, "Timed Out Connecting", "Check the validity of the server address and port and try again.");
     }
 
-    private void handleIO(IOException exception) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(exception.getMessage());
-        alert.setContentText("Check the validity of the server address and port and try again.");
-        alert.showAndWait();
+    private void handleIO(StageManager stageManager, IOException exception) {
+        stageManager.showAlertLater(Alert.AlertType.ERROR, exception.getMessage(), "Check the validity of the server address and port and try again.");
     }
 }

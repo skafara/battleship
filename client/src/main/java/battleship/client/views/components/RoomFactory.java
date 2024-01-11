@@ -1,7 +1,6 @@
 package battleship.client.views.components;
 
 import battleship.client.controllers.Controller;
-import battleship.client.controllers.exceptions.ReachedLimitException;
 import battleship.client.models.ApplicationState;
 import battleship.client.models.ClientState;
 import battleship.client.models.Model;
@@ -15,14 +14,10 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.util.concurrent.CompletableFuture;
 
 public class RoomFactory {
@@ -37,20 +32,23 @@ public class RoomFactory {
         vBox.setSpacing(SPACING);
         vBox.setPadding(new Insets(CONTROL_PANEL_PADDING_TOP, 0, 0, 0));
 
+        ApplicationState applicationState = model.applicationState;
+
         Text textRoomCode = new Text();
         textRoomCode.textProperty().bind(
                 Bindings.createStringBinding(
-                        () -> String.format("Room %s", model.applicationState.roomCodeProperty().get()),
+                        () -> String.format("Room %s", applicationState.roomCodeProperty().get()),
                         model.applicationState.roomCodeProperty()
                 )
         );
 
         Button buttonLeaveRoom = FormFactory.getButton("Leave Room", e -> handleButtonLeaveRoom(model, controller));
-        buttonLeaveRoom.disableProperty().bind(model.applicationState.buttonLeaveRoomDisableProperty());
+        buttonLeaveRoom.disableProperty().bind(applicationState.roomDisableProperty());
 
         vBox.getChildren().addAll(textRoomCode, buttonLeaveRoom);
         if (!model.clientState.isBoardReadyProperty().get()) {
             Button buttonReady = FormFactory.getButton("Ready", e -> handleButtonReady(model, controller));
+            buttonReady.disableProperty().bind(applicationState.roomDisableProperty());
             vBox.getChildren().add(buttonReady);
         }
 
@@ -67,17 +65,19 @@ public class RoomFactory {
         }, model.clientState.isBoardReadyProperty(), model.opponentState.isBoardReadyProperty());
 
         hBox.getChildren().addAll(
-                getBoardSide(model.clientState, controller, true, isInGameBinding),
-                getBoardSide(model.opponentState, controller, false, isInGameBinding)
+                getBoardSide(model, controller, true, isInGameBinding),
+                getBoardSide(model, controller, false, isInGameBinding)
         );
 
         return hBox;
     }
 
-    private static VBox getBoardSide(ClientState clientState, Controller controller, boolean isClient, BooleanBinding isInGame) {
+    private static VBox getBoardSide(Model model, Controller controller, boolean isClient, BooleanBinding isInGame) {
         VBox vBox = new VBox();
         vBox.setSpacing(SPACING);
         vBox.setAlignment(Pos.CENTER);
+
+        ClientState clientState = isClient ? model.clientState : model.opponentState;;
 
         Text textNickname = new Text();
         if (isClient) {
@@ -99,7 +99,7 @@ public class RoomFactory {
             );
         }
 
-        Board board = new Board(clientState, controller, isClient, isInGame);
+        Board board = new Board(model, controller, isClient, isInGame);
 
         Text textDescription = new Text();
         textDescription.textProperty().bind(
@@ -136,14 +136,13 @@ public class RoomFactory {
 
     private static void handleButtonLeaveRoom(Model model, Controller controller) {
         ApplicationState applicationState = model.applicationState;
-        applicationState.buttonLeaveRoomDisableProperty().set(true);
+        applicationState.roomDisableProperty().set(true);
 
         CompletableFuture<Void> future = controller.leaveRoom();
-
         future.whenCompleteAsync((value, exception) -> {
             if (exception == null) {
-                Platform.runLater(() -> controller.getStageManager().setScene(StageManager.Scene.Lobby));
-                applicationState.buttonLeaveRoomDisableProperty().set(false);
+                applicationState.roomDisableProperty().set(false);
+                controller.getStageManager().setSceneLater(StageManager.Scene.Lobby);
                 return;
             }
 
@@ -156,26 +155,26 @@ public class RoomFactory {
                 }
             }
 
-            applicationState.buttonLeaveRoomDisableProperty().set(false);
+            applicationState.roomDisableProperty().set(false);
         });
     }
 
     private static void handleButtonReady(Model model, Controller controller) {
         ApplicationState applicationState = model.applicationState;
-        applicationState.buttonReadyDisableProperty().set(true);
+        applicationState.roomDisableProperty().set(true);
 
         CompletableFuture<Void> future = controller.boardReady(model.clientState.getBoard());
-
         future.whenCompleteAsync((value, exception) -> {
             if (exception == null) {
-                applicationState.buttonReadyDisableProperty().set(false);
-                Platform.runLater(() -> controller.getStageManager().setScene(StageManager.Scene.Room));
+                applicationState.roomDisableProperty().set(false);
+                controller.getStageManager().setSceneLater(StageManager.Scene.Room);
                 return;
             }
 
+            StageManager stageManager = controller.getStageManager();
             switch (exception) {
-                case IllegalArgumentException e -> Platform.runLater(RoomFactory::handleIllegalBoard);
-                case IllegalStateException e -> Platform.runLater(RoomFactory::handleNotYourTurn);
+                case IllegalArgumentException e -> handleIllegalBoard(stageManager);
+                case IllegalStateException e -> handleNotYourTurn(stageManager);
                 /*case IOException e -> {
                     Platform.runLater(() -> handleIO(e));
                 }*/
@@ -184,24 +183,16 @@ public class RoomFactory {
                 }
             }
 
-            applicationState.buttonReadyDisableProperty().set(false);
+            applicationState.roomDisableProperty().set(false);
         });
     }
 
-    private static void handleIllegalBoard() { // TODO factory?
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText("Invalid Board");
-        alert.setContentText("Check the validity of the game board.");
-        alert.showAndWait();
+    private static void handleIllegalBoard(StageManager stageManager) {
+        stageManager.showAlertLater(Alert.AlertType.ERROR, "Invalid Board", "Check the validity of the game board.");
     }
 
-    private static void handleNotYourTurn() {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText("Not Your Turn");
-        alert.setContentText("Wait for the opponent's turn.");
-        alert.showAndWait();
+    private static void handleNotYourTurn(StageManager stageManager) {
+        stageManager.showAlertLater(Alert.AlertType.ERROR, "Not Your Turn", "Wait for the opponent's turn.");
     }
 
 }

@@ -164,6 +164,10 @@ void Server::Reconnect_Client(std::shared_ptr<game::Client> &client) {
 
 	if (room->Is_Full()) {
 		const game::Client &opponent = room->Get_Opponent(*client);
+		if (Is_Nickname_Disconnected(opponent.Get_Nickname())) {
+			client->Send_Msg(msgs::Messages::Opponent_No_Response(msgs::Messages::Duration::kShort));
+		}
+
 		opponent.Send_Msg(msgs::Messages::Opponent_Rejoin());
 
 		client->Send_Msg(msgs::Messages::Opponent_Nickname_Set(opponent.Get_Nickname()));
@@ -216,13 +220,14 @@ void Server::Clients_Terminator() {
 		for (auto it = _disconnected.begin(); it != _disconnected.end(); ) {
 			const std::shared_ptr<game::Client> client = *it;
 			const auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - client->Get_Last_Active());
-			std::cout << duration.count() << std::endl;
 			if (duration >= Timeout_Long) {
 				std::shared_ptr<game::Room> room = Get_Room(client);
 				if (room) {
-					game::Client &opponent = room->Get_Opponent(*client);
-					opponent.Send_Msg(msgs::Messages::Opponent_No_Response(msgs::Messages::Duration::kLong));
-					opponent.Set_State(game::State::kIn_Lobby);
+					if (room->Is_Full()) {
+						game::Client &opponent = room->Get_Opponent(*client);
+						opponent.Send_Msg(msgs::Messages::Opponent_No_Response(msgs::Messages::Duration::kLong));
+						opponent.Set_State(game::State::kIn_Lobby);
+					}
 					Destroy_Room(room);
 				}
 

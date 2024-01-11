@@ -19,7 +19,7 @@ public class StateMachine implements Runnable {
         try {
             for (;;) {
                 Message msg = messages.take();
-                System.out.println("Vyzvedavam zpravu " + msg.Serialize());
+                System.out.println("To Process: " + msg.Serialize());
 
                 Consumer<Message> handler;
                 switch (msg.getType()) {
@@ -35,7 +35,6 @@ public class StateMachine implements Runnable {
                     case OPPONENT_REJOIN -> handler = stateMachineController::handleOpponentRejoin;
                     case BOARD_STATE -> handler = stateMachineController::handleBoardState;
                     default -> {
-                        System.out.println("nevyhovuje?");
                         continue;
                     }
                 }
