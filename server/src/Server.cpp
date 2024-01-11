@@ -50,6 +50,7 @@ void Server::Refuse_Connection(std::unique_ptr<ntwrk::Socket> sock) const {
 }
 
 void Server::Serve_Client(std::shared_ptr<game::Client> client) {
+	client->Set_State(game::State::kInit);
 	client->Send_Msg(msgs::Messages::Welcome());
 	client->Set_Last_Active(std::chrono::steady_clock::now());
 	game::StateMachine::Run(*this, client);
