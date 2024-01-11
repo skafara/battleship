@@ -48,32 +48,17 @@ namespace game {
 			try {
 				const msgs::Message msg = Await_Msg();
 
-				std::cout << "lck" << std::endl;
 				std::lock_guard lck{_server.Get_Mutex()};
 
-				if (_client->Get_State() == State::kInit) {
-					std::cout << "INIT" << std::endl;
-				} else if (_client->Get_State() == State::kIn_Lobby) {
-					std::cout << "IN LOBBY" << std::endl;
-				} else if (_client->Get_State() == State::kIn_Room) {
-					std::cout << "IN ROOM" << std::endl;
-				} else if (_client->Get_State() == State::kIn_Game) {
-					std::cout << "IN GAME" << std::endl;
-				} else {
-					std::cout << "ELSE" << std::endl;
-				}
 				if (!kExpected_Msgs.at(_client->Get_State()).contains(msg.Get_Type())) {
 					throw msgs::IllegalMessageException{"Illegal Client State Message"};
 				}
 
 				const std::pair<State, msgs::MessageType> pair{_client->Get_State(), msg.Get_Type()};
-				std::cout << "vyzvednout handler" << std::endl;
 				const t_Handler handler = kHandlers.at(pair);
-				std::cout << "vykonat" << std::endl;
 				if (handler(*this, msg)) {
 					_client->Set_State(kSuccess_Transitions.at({_client->Get_State(), msg.Get_Type()}));
 				}
-				std::cout << "vykonano" << std::endl;
 			}
 			catch (const ntwrk::SocketException &e) {
 				std::cerr << e.what() << std::endl;
