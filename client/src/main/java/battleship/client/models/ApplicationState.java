@@ -11,10 +11,10 @@ public class ApplicationState {
     private final BooleanProperty lobbyDisable = new SimpleBooleanProperty(false);
     private final BooleanProperty roomDisable = new SimpleBooleanProperty(false);
 
-    private final StringProperty serverAddress = new SimpleStringProperty("localhost");
-    private final StringProperty serverPort = new SimpleStringProperty("50000");
-    private final StringProperty nickname = new SimpleStringProperty("standa");
-    private final StringProperty roomCode = new SimpleStringProperty("7938");
+    private final StringProperty serverAddress = new SimpleStringProperty("");
+    private final StringProperty serverPort = new SimpleStringProperty("");
+    private final StringProperty nickname = new SimpleStringProperty("");
+    private final StringProperty roomCode = new SimpleStringProperty("");
 
     public BooleanProperty indexDisableProperty() {
         return indexDisable;
