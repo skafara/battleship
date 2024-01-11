@@ -55,6 +55,7 @@ namespace game {
 				}
 
 				const std::pair<State, msgs::MessageType> pair{_client->Get_State(), msg.Get_Type()};
+				std::cout << "vyzvednout handler" << std::endl;
 				const t_Handler handler = kHandlers.at(pair);
 				std::cout << "vykonat" << std::endl;
 				if (handler(*this, msg)) {
