@@ -216,8 +216,8 @@ namespace game {
 
 		try {
 			Board board{};
-			//for (size_t i = 0; i < 20; ++i) { // TODO
-			for (size_t i = 0; i < 2; ++i) {
+			for (size_t i = 0; i < 20; ++i) { // TODO
+			//for (size_t i = 0; i < 2; ++i) {
 				const std::string &field = msg.Get_Param(i);
 				const std::pair<size_t, size_t> field_pos = Board::Deserialize_Field(field);
 				board.Set_Ship(field_pos.first, field_pos.second);
