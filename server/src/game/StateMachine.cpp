@@ -56,9 +56,11 @@ namespace game {
 
 				const std::pair<State, msgs::MessageType> pair{_client->Get_State(), msg.Get_Type()};
 				const t_Handler handler = kHandlers.at(pair);
+				std::cout << "vykonat" << std::endl;
 				if (handler(*this, msg)) {
 					_client->Set_State(kSuccess_Transitions.at({_client->Get_State(), msg.Get_Type()}));
 				}
+				std::cout << "vykonano" << std::endl;
 			}
 			catch (const ntwrk::SocketException &e) {
 				std::cerr << e.what() << std::endl;
