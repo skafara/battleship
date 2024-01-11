@@ -53,7 +53,7 @@ public class Communicator {
             }
             bufferedWriter.write(c);
         }
-        bufferedWriter.newLine();
+        bufferedWriter.write(0x0A);
         bufferedWriter.flush();
     }
 
