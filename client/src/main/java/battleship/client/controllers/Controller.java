@@ -80,7 +80,7 @@ public class Controller {
                         stageManager.setSceneLater(StageManager.Scene.Room);
                     }
 
-                    new Thread(new KeepAlive(communicator)).start();
+                    //new Thread(new KeepAlive(communicator)).start();
 
                     model.clientState.isRespondingProperty().set(true);
                     new Thread(stateMachine).start();
