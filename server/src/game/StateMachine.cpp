@@ -51,6 +51,15 @@ namespace game {
 				std::cout << "lck" << std::endl;
 				std::lock_guard lck{_server.Get_Mutex()};
 
+				if (_client->Get_State() == State::kInit) {
+					std::cout << "INIT" << std::endl;
+				} else if (_client->Get_State() == State::kIn_Lobby) {
+					std::cout << "IN LOBBY" << std::endl;
+				} else if (_client->Get_State() == State::kIn_Room) {
+					std::cout << "IN ROOM" << std::endl;
+				} else if (_client->Get_State() == State::kIn_Game) {
+					std::cout << "IN GAME" << std::endl;
+				}
 				if (!kExpected_Msgs.at(_client->Get_State()).contains(msg.Get_Type())) {
 					throw msgs::IllegalMessageException{"Illegal Client State Message"};
 				}
