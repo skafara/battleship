@@ -18,17 +18,11 @@ public class KeepAlive implements Runnable {
         try {
             for (;;) {
                 communicator.send(new Message(Message.Type.KEEP_ALIVE));
-
-                try {
-                    Thread.sleep(INTERVAL_MS);
-                }
-                catch (InterruptedException e) {
-                    //
-                }
+                Thread.sleep(INTERVAL_MS);
             }
         }
-        catch (IOException e) {
-            e.printStackTrace();
+        catch (IOException | InterruptedException e) {
+            System.err.println("Stop KeepAlive Thread: " + e.getMessage());
         }
     }
 }

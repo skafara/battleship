@@ -44,4 +44,11 @@ public class ApplicationState {
         return roomCode;
     }
 
+    public void reset() {
+        indexDisable.set(false);
+        lobbyDisable.set(false);
+        roomDisable.set(false);
+        roomCode.set("");
+    }
+
 }

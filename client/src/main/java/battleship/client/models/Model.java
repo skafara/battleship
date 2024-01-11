@@ -11,4 +11,9 @@ public class Model {
     }
 
 
+    public void reset() {
+        applicationState.reset();
+        clientState.reset();
+        opponentState.reset();
+    }
 }

@@ -1,6 +1,5 @@
 package battleship.client.controllers;
 
-import java.io.*;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Consumer;
@@ -19,7 +18,7 @@ public class StateMachine implements Runnable {
         try {
             for (;;) {
                 Message msg = messages.take();
-                System.out.println("To Process: " + msg.Serialize());
+                System.out.println("StateMachine To Process: " + msg.Serialize());
 
                 Consumer<Message> handler;
                 switch (msg.getType()) {
@@ -42,7 +41,7 @@ public class StateMachine implements Runnable {
             }
         }
         catch (InterruptedException e) {
-            //
+            System.err.println("StateMachine Interrupted");
         }
     }
 

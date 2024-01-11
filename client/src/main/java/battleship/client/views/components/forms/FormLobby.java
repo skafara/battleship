@@ -80,9 +80,6 @@ public class FormLobby extends HBox {
             switch (exception) {
                 case ReachedLimitException e -> handleRoomFull(stageManager);
                 case NotExistsException e -> handleNotExists(stageManager);
-                /*case IOException e -> {
-                    Platform.runLater(() -> handleIO(e));
-                }*/
                 default -> {
                     //
                 }

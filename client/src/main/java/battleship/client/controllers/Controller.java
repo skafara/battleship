@@ -7,6 +7,7 @@ import battleship.client.models.BoardState;
 import battleship.client.models.Model;
 import battleship.client.views.StageManager;
 import javafx.application.Platform;
+import javafx.scene.control.Alert;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -15,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class Controller {
 
@@ -57,9 +60,9 @@ public class Controller {
 
                     new Thread(new KeepAlive(communicator)).start();
 
-                    CompletableFuture<Message> welcomeFuture = expectMessage(Message.Type.WELCOME, Message.Type.LIMIT_CLIENTS); // timeout (nebo jen odchytavat receive io exception?) + reconnect
+                    CompletableFuture<Message> welcomeFuture = expectMessage(Message.Type.WELCOME, Message.Type.LIMIT_CLIENTS);
                     new Thread(messagesManager).start();
-                    Message welcomeMessage = welcomeFuture.get();
+                    Message welcomeMessage = awaitMessage(welcomeFuture);
                     if (welcomeMessage.getType() == Message.Type.LIMIT_CLIENTS) {
                         future.completeExceptionally(new ReachedLimitException(Integer.parseInt(welcomeMessage.getParameter(0))));
                     }
@@ -67,7 +70,7 @@ public class Controller {
                     CompletableFuture<Message> responseFuture = expectMessage(Message.Type.ACK, Message.Type.NICKNAME_EXISTS, Message.Type.REJOIN);
                     sendMessage(new Message(Message.Type.NICKNAME_SET, nickname));
 
-                    Message message = responseFuture.get();
+                    Message message = awaitMessage(responseFuture);
                     if (message.getType() == Message.Type.ACK) {
                         stageManager.setSceneLater(StageManager.Scene.Lobby);
                     }
@@ -79,14 +82,18 @@ public class Controller {
                         stageManager.setSceneLater(StageManager.Scene.Room);
                     }
 
+                    model.clientState.isRespondingProperty().set(true);
                     new Thread(stateMachine).start();
 
                     future.complete(null);
                 }
-                catch (IllegalArgumentException | IOException e) {
+                catch (IOException | RuntimeException e) {
+                    System.err.println("socket");
                     future.completeExceptionally(e);
-                } catch (ExecutionException | InterruptedException e) {
-                    throw new RuntimeException(e);
+                }
+                catch (TimeoutException e) {
+                    System.err.println("timeout");
+                    future.completeExceptionally(e);
                 }
             }).start();
         }
@@ -103,7 +110,7 @@ public class Controller {
             CompletableFuture<Message> responseFuture = expectMessage(Message.Type.ROOM_CREATED, Message.Type.LIMIT_ROOMS);
             try {
                 sendMessage(new Message(Message.Type.ROOM_CREATE));
-                Message response = responseFuture.get();
+                Message response = awaitMessage(responseFuture);
 
                 if (response.getType() == Message.Type.ROOM_CREATED) {
                     model.applicationState.roomCodeProperty().set(response.getParameter(0));
@@ -112,10 +119,19 @@ public class Controller {
                 else {
                     future.completeExceptionally(new ReachedLimitException(Integer.parseInt(response.getParameter(0))));
                 }
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
+                // socket
+                System.err.println("socket");
                 future.completeExceptionally(e);
-            } catch (ExecutionException | InterruptedException e) {
-                throw new RuntimeException(e);
+            }
+            catch (TimeoutException e) {
+                System.err.println("timeout");
+                future.completeExceptionally(e);
+            }
+            catch (RuntimeException e) {
+                handleRuntimeException();
+                future.completeExceptionally(e);
             }
         }).start();
 
@@ -140,22 +156,28 @@ public class Controller {
             CompletableFuture<Message> responseFuture = expectMessage(Message.Type.ACK, Message.Type.ROOM_FULL, Message.Type.ROOM_NOT_EXISTS);
             try {
                 sendMessage(new Message(Message.Type.ROOM_JOIN, code));
-                Message response = responseFuture.get();
+                Message response = awaitMessage(responseFuture);
 
                 if (response.getType() == Message.Type.ACK) {
                     future.complete(null);
-                }
-                else if (response.getType() == Message.Type.ROOM_FULL) {
+                } else if (response.getType() == Message.Type.ROOM_FULL) {
                     future.completeExceptionally(new ReachedLimitException(2));
-                }
-                else {
+                } else {
                     future.completeExceptionally(new NotExistsException());
                 }
-
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
+                // socket
+                System.err.println("socket");
                 future.completeExceptionally(e);
-            } catch (ExecutionException | InterruptedException e) {
-                throw new RuntimeException(e);
+            }
+            catch (TimeoutException e) {
+                System.err.println("timeout");
+                future.completeExceptionally(e);
+            }
+            catch (RuntimeException e) {
+                handleRuntimeException();
+                future.completeExceptionally(e);
             }
         }).start();
 
@@ -168,16 +190,25 @@ public class Controller {
             CompletableFuture<Message> responseFuture = expectMessage(Message.Type.ACK);
             try {
                 sendMessage(new Message(Message.Type.ROOM_LEAVE));
-                responseFuture.get();
+                awaitMessage(responseFuture);
 
                 model.applicationState.roomCodeProperty().set("");
                 model.clientState.resetExceptNickname();
                 model.opponentState.reset();
                 future.complete(null);
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
+                // socket
+                System.err.println("socket");
                 future.completeExceptionally(e);
-            } catch (ExecutionException | InterruptedException e) {
-                throw new RuntimeException(e);
+            }
+            catch (TimeoutException e) {
+                System.err.println("timeout");
+                future.completeExceptionally(e);
+            }
+            catch (RuntimeException e) {
+                handleRuntimeException();
+                future.completeExceptionally(e);
             }
         }).start();
 
@@ -195,7 +226,7 @@ public class Controller {
             CompletableFuture<Message> responseFuture = expectMessage(Message.Type.ACK, Message.Type.BOARD_ILLEGAL);
             try {
                 sendMessage(getBoardReadyMessage(boardState));
-                Message response = responseFuture.get();
+                Message response = awaitMessage(responseFuture);
 
                 if (response.getType() == Message.Type.ACK) {
                     model.clientState.isBoardReadyProperty().set(true);
@@ -204,12 +235,20 @@ public class Controller {
                 else {
                     future.completeExceptionally(new IllegalArgumentException());
                 }
-            } catch (IOException e) {
-                future.completeExceptionally(e);
-            } catch (ExecutionException | InterruptedException e) {
-                throw new RuntimeException(e);
             }
-
+            catch (IOException e) {
+                // socket
+                System.err.println("socket");
+                future.completeExceptionally(e);
+            }
+            catch (TimeoutException e) {
+                System.err.println("timeout");
+                future.completeExceptionally(e);
+            }
+            catch (RuntimeException e) {
+                handleRuntimeException();
+                future.completeExceptionally(e);
+            }
         }).start();
 
         return future;
@@ -227,7 +266,7 @@ public class Controller {
             CompletableFuture<Message> responseFuture = expectMessage(Message.Type.TURN_RESULT, Message.Type.TURN_ILLEGAL, Message.Type.TURN_NOT_YOU);
             try {
                 sendMessage(new Message(Message.Type.TURN, BoardState.SerializeField(row, col)));
-                Message response = responseFuture.get();
+                Message response = awaitMessage(responseFuture);
 
                 if (response.getType() == Message.Type.TURN_RESULT) {
                     if (response.getParameter(1).equals("HIT")) {
@@ -244,12 +283,20 @@ public class Controller {
                 else {
                     future.completeExceptionally(new IllegalStateException());
                 }
-            } catch (IOException e) {
-                future.completeExceptionally(e);
-            } catch (ExecutionException | InterruptedException e) {
-                throw new RuntimeException(e);
             }
-
+            catch (IOException e) {
+                // socket
+                System.err.println("socket");
+                future.completeExceptionally(e);
+            }
+            catch (TimeoutException e) {
+                System.err.println("timeout");
+                future.completeExceptionally(e);
+            }
+            catch (RuntimeException e) {
+                handleRuntimeException();
+                future.completeExceptionally(e);
+            }
         }).start();
 
         return future;
@@ -273,6 +320,23 @@ public class Controller {
             }
         }
         return new Message(Message.Type.BOARD_READY, positions.toArray());
+    }
+
+    private Message awaitMessage(CompletableFuture<Message> future) throws TimeoutException, IOException {
+        try {
+            return future.get(5, TimeUnit.SECONDS);
+        } catch (ExecutionException | InterruptedException e) {
+            if (e.getCause() instanceof IOException) {
+                throw new IOException();
+            }
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void handleRuntimeException() {
+        stageManager.showAlertLater(Alert.AlertType.ERROR, "Runtime Exception", "Unexpected Error During Execution");
+        stageManager.setSceneLater(StageManager.Scene.Index);
+        model.reset();
     }
 
 }
