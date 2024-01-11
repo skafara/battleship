@@ -35,7 +35,8 @@ public:
 	void Reconnect_Client(std::shared_ptr<game::Client> &client) override;
 
 private:
-	static constexpr std::chrono::seconds Timeout_Long{120};
+	static constexpr bool Is_Timeout_Debug = false;
+	static constexpr std::chrono::minutes Timeout_Long{Is_Timeout_Debug ? 5 : 2};
 
 	const size_t _lim_clients;
 	const size_t _lim_rooms;
