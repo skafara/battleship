@@ -58,8 +58,6 @@ public class Controller {
                     stateMachine = new StateMachine(new StateMachineController(model, stageManager));
                     messagesManager = new MessagesManager(communicator, stateMachine);
 
-                    new Thread(new KeepAlive(communicator)).start();
-
                     CompletableFuture<Message> welcomeFuture = expectMessage(Message.Type.WELCOME, Message.Type.LIMIT_CLIENTS);
                     new Thread(messagesManager).start();
                     Message welcomeMessage = awaitMessage(welcomeFuture);
@@ -81,6 +79,8 @@ public class Controller {
                         model.applicationState.roomCodeProperty().set(message.getParameter(1));
                         stageManager.setSceneLater(StageManager.Scene.Room);
                     }
+
+                    new Thread(new KeepAlive(communicator)).start();
 
                     model.clientState.isRespondingProperty().set(true);
                     new Thread(stateMachine).start();
