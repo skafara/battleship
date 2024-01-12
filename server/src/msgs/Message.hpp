@@ -13,7 +13,7 @@ namespace msgs {
 
 	class IllegalMessageException : public std::runtime_error {
 	public:
-		IllegalMessageException(std::string text) : std::runtime_error(text) {
+		explicit IllegalMessageException(const std::string &text) : std::runtime_error(text) {
 			//
 		}
 	};
@@ -105,7 +105,7 @@ namespace msgs {
 	class Message {
 	public:
 		template<typename... Args>
-		Message(const MessageType type, Args &&... args) {
+		explicit Message(const MessageType type, Args &&... args) {
 			_type = type;
 			Store_Params(std::forward<Args>(args)...);
 		};
@@ -121,6 +121,9 @@ namespace msgs {
 		static Message Deserialize(const std::string &pair);
 
 	private:
+		static constexpr char kEscape_Char = '\\';
+		static constexpr char kParam_Delimiter = '|';
+
 		MessageType _type;
 		std::vector<std::string> _params;
 

@@ -77,7 +77,6 @@ namespace msgs {
 		static Message Ack();
 		static Message Conn_Term();
 		static Message Limit_Clients(size_t lim);
-		//static Message Nickname_Prompt();
 		static Message Nickname_Exists();
 		static Message Room_Created(const std::string &code);
 		static Message Limit_Rooms(size_t lim);

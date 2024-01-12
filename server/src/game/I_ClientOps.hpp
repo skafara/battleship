@@ -12,7 +12,6 @@ namespace game {
 	enum class State;
 	class I_ClientOps {
 	public:
-		//virtual std::mutex &Get_Mutex_State() const = 0;
 		virtual State Get_State() const = 0;
 		virtual void Set_State(State state) = 0;
 
@@ -30,9 +29,6 @@ namespace game {
 		virtual std::unique_ptr<ntwrk::Socket> Give_Up_Socket() = 0;
 		virtual void Replace_Socket(std::unique_ptr<ntwrk::Socket> sock) = 0;
 		virtual void Close_Socket() = 0;
-
-		//virtual msgs::Message Await_Msg() const = 0;
-		//virtual void Await_Ack() const = 0;
 	};
 
 }

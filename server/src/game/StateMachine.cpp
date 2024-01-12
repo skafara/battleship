@@ -289,7 +289,7 @@ namespace game {
 					_client->Set_State(State::kIn_Room);
 					opponent.Set_State(State::kIn_Room);
 					room->Reset_Boards();
-					return false; // TODO false a true
+					return false;
 				}
 			}
 			else {

@@ -12,7 +12,7 @@ namespace game {
 
 	std::string Room::Generate_Code() {
 		std::ostringstream osstream;
-		for (size_t i = 0; i < 4; ++i) {
+		for (size_t i = 0; i < kRoom_Code_Len; ++i) {
 			osstream << (util::Generator::From_Range(0, 9));
 		}
 		return osstream.str();
@@ -22,7 +22,7 @@ namespace game {
 		return _code;
 	}
 
-	const std::array<std::shared_ptr<Client>, 2> &Room::Get_Clients() const {
+	const std::array<std::shared_ptr<Client>, Room::kClients_Cnt> &Room::Get_Clients() const {
 		return _clients;
 	}
 
@@ -31,9 +31,9 @@ namespace game {
 	}
 
 	void Room::Join(const std::shared_ptr<Client> client) {
-		for (size_t i = 0; i < 2; ++i) {
-			if (_clients[i] == nullptr) {
-				_clients[i] = client;
+		for (std::shared_ptr<Client> &_client : _clients) {
+			if (_client == nullptr) {
+				_client = client;
 				return;
 			}
 		}
@@ -42,7 +42,7 @@ namespace game {
 	}
 
 	Client &Room::Get_Opponent(const Client &client) {
-		return *(_clients[(Get_Client_Idx(client) + 1) % 2]);
+		return *(_clients[(Get_Client_Idx(client) + 1) % _clients.size()]);
 	}
 
 	Board &Room::Get_Board(const Client &client) {
@@ -56,10 +56,6 @@ namespace game {
 	bool Room::Is_Board_Ready(const Client &client) {
 		return _boards_ready[Get_Client_Idx(client)];
 	}
-
-	/*bool Room::Is_Both_Boards_Ready() const {
-		return std::ranges::all_of(_boards_ready, [](bool ready) {return ready;});
-	}*/
 
 	void Room::Set_Random_Client_On_Turn() {
 		_client_on_turn_idx = util::Generator::From_Range(0, 1);

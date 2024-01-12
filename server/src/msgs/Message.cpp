@@ -19,10 +19,10 @@ namespace msgs {
 
 		osstream << kMessageType_String.at(_type);
 		for (const std::string &param : _params) {
-			osstream << '|';
+			osstream << kParam_Delimiter;
 			for (char c : param) {
-				if (c == '\\' || c == '|') {
-					osstream << '\\';
+				if (c == kEscape_Char || c == kParam_Delimiter) {
+					osstream << kEscape_Char;
 				}
 				osstream << c;
 			}
@@ -36,7 +36,7 @@ namespace msgs {
 		std::cout << "Deserialize: " << str << std::endl;
 
 		std::string type_str;
-		std::getline(isstream, type_str, '|');
+		std::getline(isstream, type_str, kParam_Delimiter);
 
 		const auto it_msg_type = std::ranges::find_if(kMessageType_String, [&type_str](const auto &pair) -> bool {
 			return pair.second == type_str;
@@ -70,12 +70,12 @@ namespace msgs {
 
 			const char c = str[i];
 			if (!escape) {
-				if (c == '\\') {
+				if (c == kEscape_Char) {
 					escape = true;
 					continue;
 				}
 
-				if (c == '|') {
+				if (c == kParam_Delimiter) {
 					msg.Store_Param(param_osstream.str());
 					param_osstream = std::ostringstream{};
 					continue;

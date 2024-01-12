@@ -9,8 +9,8 @@ namespace game {
 
 	class Board {
 	public:
-		static constexpr bool Is_Debug = true;
-		static constexpr size_t kShip_Fields_Cnt = Is_Debug ? 2 : 20;
+		static constexpr bool kIs_Debug = true;
+		static constexpr size_t kShip_Fields_Cnt = kIs_Debug ? 2 : 20;
 
 		static constexpr size_t kSize = 10;
 
@@ -19,13 +19,12 @@ namespace game {
 
 		bool Is_Guess(size_t row, size_t col) const;
 		bool Is_Ship(size_t row, size_t col) const;
+		bool Is_All_Ships_Guessed() const;
 
 		bool Turn(size_t row, size_t col);
 
 		static std::string Serialize_Field(size_t row, size_t col);
 		static std::pair<size_t, size_t> Deserialize_Field(const std::string &field);
-
-		bool Is_All_Ships_Guessed() const;
 
 	private:
 		static const std::map<size_t, size_t> kShips_Sizes_Cnts;

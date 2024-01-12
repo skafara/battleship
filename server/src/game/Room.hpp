@@ -8,17 +8,18 @@ namespace game {
 
 	class Room {
 	public:
-		// mutex lock?
-		Room(const std::string &code);
+		static constexpr size_t kClients_Cnt = 2;
+		static constexpr size_t kRoom_Code_Len = 4;
+
+		explicit Room(const std::string &code);
 
 		static std::string Generate_Code();
 		const std::string &Get_Code() const;
 
-		const std::array<std::shared_ptr<Client>, 2> &Get_Clients() const;
+		const std::array<std::shared_ptr<Client>, kClients_Cnt> &Get_Clients() const;
 		bool Is_Full();
 		void Join(const std::shared_ptr<Client> client);
 
-		//bool Has_Opponent(const Client &client);
 		Client &Get_Opponent(const Client &client);
 		Board &Get_Board(const Client &client);
 		void Set_Board(const Client &client, const Board &board);
@@ -27,7 +28,6 @@ namespace game {
 
 		void Set_Board_Ready(const Client &client);
 		bool Is_Board_Ready(const Client &client);
-		//bool Is_Both_Boards_Ready() const;
 
 		void Set_Random_Client_On_Turn();
 		void Set_Opponent_On_Turn(const Client &client);
@@ -38,10 +38,10 @@ namespace game {
 	private:
 		std::string _code;
 
-		std::array<std::shared_ptr<Client>, 2> _clients;
-		std::array<Board, 2> _boards;
+		std::array<std::shared_ptr<Client>, kClients_Cnt> _clients;
+		std::array<Board, kClients_Cnt> _boards;
 
-		std::array<bool, 2> _boards_ready;
+		std::array<bool, kClients_Cnt> _boards_ready;
 
 		size_t _client_on_turn_idx;
 

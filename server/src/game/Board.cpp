@@ -7,7 +7,7 @@
 
 namespace game {
 
-	const std::map<size_t, size_t> Board::kShips_Sizes_Cnts = Is_Debug ?
+	const std::map<size_t, size_t> Board::kShips_Sizes_Cnts = kIs_Debug ?
 			std::map<size_t, size_t>{{1, 2}} : std::map<size_t, size_t>{{1, 4}, {2, 3}, {3, 2}, {4, 1}};
 
 	void Board::Set_Ship(size_t row, size_t col) {
@@ -82,6 +82,15 @@ namespace game {
 		return _ships[Get_Field_Idx(row, col)];
 	}
 
+	bool Board::Is_All_Ships_Guessed() const {
+		for (size_t i = 0; i < _guesses.size(); ++i) {
+			if (!_guesses[i] && _ships[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+
 	bool Board::Turn(size_t row, size_t col) {
 		const size_t field_idx = Get_Field_Idx(row, col);
 		const bool is_ship = _ships[field_idx];
@@ -113,15 +122,6 @@ namespace game {
 		}
 
 		return {row, col};
-	}
-
-	bool Board::Is_All_Ships_Guessed() const {
-		for (size_t i = 0; i < _guesses.size(); ++i) {
-			if (!_guesses[i] && _ships[i]) {
-				return false;
-			}
-		}
-		return true;
 	}
 
 } // game

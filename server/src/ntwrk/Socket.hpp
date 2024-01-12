@@ -10,7 +10,7 @@ namespace ntwrk {
 
 	class SocketException : public std::runtime_error {
 	public:
-		SocketException(std::string text) : std::runtime_error(text) {
+		explicit SocketException(const std::string &text) : std::runtime_error(text) {
 			//
 		}
 	};
