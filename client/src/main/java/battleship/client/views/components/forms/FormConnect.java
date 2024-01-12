@@ -5,7 +5,6 @@ import battleship.client.controllers.exceptions.ExistsException;
 import battleship.client.controllers.exceptions.ReachedLimitException;
 import battleship.client.models.ApplicationState;
 import battleship.client.views.StageManager;
-import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
@@ -15,6 +14,7 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeoutException;
 
 public class FormConnect extends VBox {
 
@@ -83,8 +83,8 @@ public class FormConnect extends VBox {
             catch (UnknownHostException e) {
                 handleUnknownHost(stageManager);
             }
-            catch (SocketTimeoutException e) {
-                handleSocketTimeout(stageManager);
+            catch (SocketTimeoutException | TimeoutException e) {
+                handleTimeout(stageManager);
             }
             catch (IOException e) {
                 handleIO(stageManager, e);
@@ -113,7 +113,7 @@ public class FormConnect extends VBox {
         stageManager.showAlertLater(Alert.AlertType.ERROR, "Unknown Host", "Check the validity of the server address.");
     }
 
-    private void handleSocketTimeout(StageManager stageManager) {
+    private void handleTimeout(StageManager stageManager) {
         stageManager.showAlertLater(Alert.AlertType.ERROR, "Timed Out Connecting", "Check the validity of the server address and port and try again.");
     }
 

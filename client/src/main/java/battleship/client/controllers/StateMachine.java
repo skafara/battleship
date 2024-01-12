@@ -41,7 +41,7 @@ public class StateMachine implements Runnable {
             }
         }
         catch (InterruptedException e) {
-            System.err.println("StateMachine Interrupted");
+            System.err.println("Stop StateMachine Thread Interrupt");
         }
     }
 

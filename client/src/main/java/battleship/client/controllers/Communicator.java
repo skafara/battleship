@@ -24,7 +24,7 @@ public class Communicator {
         boolean escape = false;
         for (char c; ; ) {
             c = (char) bufferedReader.read();
-            if (c == -1) { // EOF
+            if (c == (char) -1) { // EOF
                 throw new IOException();
             }
 

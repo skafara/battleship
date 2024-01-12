@@ -92,12 +92,17 @@ public class Controller {
                     stateMachineThread.start();
                     future.complete(null);
                 }
-                catch (IOException | RuntimeException e) {
-                    System.err.println("socket");
+                catch (IOException e) {
+                    System.err.println("Socket Exception (connect)");
                     future.completeExceptionally(e);
                 }
                 catch (TimeoutException e) {
-                    System.err.println("timeout");
+                    System.err.println("Timeout (connect)");
+                    keepAliveThread.interrupt();
+                    future.completeExceptionally(e);
+                }
+                catch (RuntimeException e) {
+                    handleRuntimeException();
                     future.completeExceptionally(e);
                 }
             }).start();
