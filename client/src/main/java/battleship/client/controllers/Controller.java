@@ -20,8 +20,8 @@ import java.util.concurrent.TimeoutException;
 
 public class Controller {
 
-    private static final int RECEIVE_MSG_TIMEOUT_MS = 15000;
-    private static final int SOCKET_CONNECTION_TIMEOUT_MS = 10000;
+    private static final int RECEIVE_MSG_TIMEOUT_MS = 15_000;
+    private static final int SOCKET_CONNECTION_TIMEOUT_MS = 10_000;
     private static final int ROOM_CODE_LENGTH = 4;
 
     private final Model model;
@@ -30,9 +30,11 @@ public class Controller {
     private Communicator communicator;
     private MessagesManager messagesManager;
 
-    private StageManager stageManager;
+    private Thread keepAliveThread;
+    private Thread messagesManagerThread;
+    private Thread stateMachineThread;
 
-    private StateMachine stateMachine;
+    private StageManager stageManager;
 
     public Controller(Model model) {
         this.model = model;
@@ -55,13 +57,15 @@ public class Controller {
                     socket = new Socket();
                     socket.connect(new InetSocketAddress(address, port_), SOCKET_CONNECTION_TIMEOUT_MS);
                     communicator = new Communicator(socket);
-                    stateMachine = new StateMachine(new StateMachineController(model, stageManager));
+                    StateMachine stateMachine = new StateMachine(new StateMachineController(model, stageManager));
                     messagesManager = new MessagesManager(communicator, stateMachine);
 
-                    new Thread(new KeepAlive(communicator)).start();
+                    keepAliveThread = new Thread(new KeepAlive(communicator));
+                    messagesManagerThread = new Thread(messagesManager);
+                    stateMachineThread = new Thread(stateMachine);
 
                     CompletableFuture<Message> welcomeFuture = expectMessage(Message.Type.WELCOME, Message.Type.LIMIT_CLIENTS);
-                    new Thread(messagesManager).start();
+                    messagesManagerThread.start();
                     Message welcomeMessage = awaitMessage(welcomeFuture);
                     if (welcomeMessage.getType() == Message.Type.LIMIT_CLIENTS) {
                         future.completeExceptionally(new ReachedLimitException(Integer.parseInt(welcomeMessage.getParameter(0))));
@@ -83,8 +87,9 @@ public class Controller {
                     }
 
                     model.clientState.isRespondingProperty().set(true);
-                    new Thread(stateMachine).start();
 
+                    keepAliveThread.start();
+                    stateMachineThread.start();
                     future.complete(null);
                 }
                 catch (IOException | RuntimeException e) {
@@ -256,7 +261,7 @@ public class Controller {
 
     public CompletableFuture<Void> turn(int row, int col) {
         CompletableFuture<Void> future = new CompletableFuture<>();
-        BoardState boardState = model.opponentState.getBoard();
+        BoardState boardState = model.opponentState.getBoardState();
         if (boardState.isGuess(row, col)) {
             future.completeExceptionally(new IllegalArgumentException());
             return future;
@@ -270,10 +275,10 @@ public class Controller {
 
                 if (response.getType() == Message.Type.TURN_RESULT) {
                     if (response.getParameter(1).equals("HIT")) {
-                        model.opponentState.getBoard().setField(BoardState.Field.HIT, row, col);
+                        model.opponentState.getBoardState().setField(BoardState.Field.HIT, row, col);
                     }
                     else {
-                        model.opponentState.getBoard().setField(BoardState.Field.MISS, row, col);
+                        model.opponentState.getBoardState().setField(BoardState.Field.MISS, row, col);
                     }
                     future.complete(null);
                 }
@@ -311,6 +316,19 @@ public class Controller {
         return messagesManager.expectMessage(type);
     }
 
+    private Message awaitMessage(CompletableFuture<Message> future) throws TimeoutException, IOException {
+        try {
+            Message message = future.get(RECEIVE_MSG_TIMEOUT_MS, TimeUnit.MILLISECONDS); // throws TimeoutException
+            System.out.println("Recv From Server: " + message.Serialize());
+            return message; // TODO if CONN_TERM throw ConnectionTerminatedException?
+        } catch (ExecutionException | InterruptedException e) {
+            if (e.getCause() instanceof IOException) {
+                throw new IOException();
+            }
+            throw new RuntimeException(e);
+        }
+    }
+
     private static Message getBoardReadyMessage(BoardState boardState) {
         List<String> positions = new ArrayList<>();
         for (int row = 0; row < BoardState.SIZE; row++) {
@@ -323,21 +341,8 @@ public class Controller {
         return new Message(Message.Type.BOARD_READY, positions.toArray());
     }
 
-    private Message awaitMessage(CompletableFuture<Message> future) throws TimeoutException, IOException {
-        try {
-            Message message = future.get(RECEIVE_MSG_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-            System.out.println("Recv From Server: " + message.Serialize());
-            return message;
-        } catch (ExecutionException | InterruptedException e) {
-            if (e.getCause() instanceof IOException) {
-                throw new IOException();
-            }
-            throw new RuntimeException(e);
-        }
-    }
-
     private void handleRuntimeException() {
-        stageManager.showAlertLater(Alert.AlertType.ERROR, "Runtime Exception", "Unexpected Error During Execution");
+        stageManager.showAlertLater(Alert.AlertType.ERROR, "Runtime Exception", "Unexpected Error Occurred During Execution");
         stageManager.setSceneLater(StageManager.Scene.Index);
         model.reset();
     }

@@ -5,7 +5,6 @@ import battleship.client.models.ApplicationState;
 import battleship.client.models.BoardState;
 import battleship.client.models.ClientState;
 import battleship.client.models.Model;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.collections.ListChangeListener;
@@ -34,7 +33,7 @@ public class Board extends GridPane {
         ClientState clientState = isClient ? model.clientState : model.opponentState;
 
         construct(model.applicationState, clientState, controller, isClient, isInGame);
-        repaint(clientState.getBoard());
+        repaint(clientState.getBoardState());
     }
 
     private void construct(ApplicationState applicationState, ClientState clientState, Controller controller, boolean isClient, BooleanBinding isInGame) {
@@ -71,11 +70,11 @@ public class Board extends GridPane {
             }, isInGame, clientState.isOnTurnProperty()));
         }
 
-        clientState.getBoard().getBoard().addListener((ListChangeListener<BoardState.Field>) change -> {
-            repaint(clientState.getBoard());
+        clientState.getBoardState().getBoard().addListener((ListChangeListener<BoardState.Field>) change -> {
+            repaint(clientState.getBoardState());
         });
 
-        setOnMouseClicked(e -> handleClick(e, applicationState, clientState.getBoard(), controller, isClient));
+        setOnMouseClicked(e -> handleClick(e, applicationState, clientState.getBoardState(), controller, isClient));
     }
 
     private static StackPane createCell() {

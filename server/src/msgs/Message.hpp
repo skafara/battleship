@@ -105,7 +105,7 @@ namespace msgs {
 	class Message {
 	public:
 		template<typename... Args>
-		explicit Message(const MessageType type, Args &&... args) {
+		Message(const MessageType type, Args &&... args) {
 			_type = type;
 			Store_Params(std::forward<Args>(args)...);
 		};

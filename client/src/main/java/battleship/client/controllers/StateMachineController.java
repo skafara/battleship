@@ -4,7 +4,6 @@ import battleship.client.models.BoardState;
 import battleship.client.models.ClientState;
 import battleship.client.models.Model;
 import battleship.client.views.StageManager;
-import javafx.application.Platform;
 import javafx.scene.control.Alert;
 
 public class StateMachineController {
@@ -18,7 +17,6 @@ public class StateMachineController {
     }
 
     public void handleConnTerm(Message message) {
-        //System.out.println(message.Serialize());
         stageManager.showAlertLater(Alert.AlertType.ERROR, "Connection Terminated", "Server has terminated the connection. Please connect to the server again.");
         stageManager.setSceneLater(StageManager.Scene.Index);
     }
@@ -32,15 +30,16 @@ public class StateMachineController {
     }
 
     public void handleOpponentRoomLeave(Message message) {
-        model.applicationState.roomCodeProperty().set("");
+        model.applicationState.resetRoomCode();
         model.clientState.resetExceptNickname();
         model.opponentState.reset();
+
         stageManager.showAlertLater(Alert.AlertType.INFORMATION, "Opponent Left Room", "Your opponent has left the room.");
         stageManager.setSceneLater(StageManager.Scene.Lobby);
     }
 
     public void handleGameBegin(Message message) {
-        //System.out.println("game begin");
+        //
     }
 
     public void handleTurnSet(Message message) {
@@ -55,9 +54,10 @@ public class StateMachineController {
             model.opponentState.isRespondingProperty().set(false);
         }
         else {
-            model.applicationState.roomCodeProperty().set("");
+            model.applicationState.resetRoomCode();
             model.clientState.resetExceptNickname();
             model.opponentState.reset();
+
             stageManager.showAlertLater(Alert.AlertType.INFORMATION, "Opponent Not Responding", "Your opponent has been disconnected for not responding to the server for a long time.");
             stageManager.setSceneLater(StageManager.Scene.Lobby);
         }
@@ -67,7 +67,7 @@ public class StateMachineController {
         String field = message.getParameter(0);
         int row = field.charAt(0) - '0';
         int col = field.charAt(1) - '0';
-        BoardState boardState = model.clientState.getBoard();
+        BoardState boardState = model.clientState.getBoardState();
         if (message.getParameter(1).equals("HIT")) {
             boardState.setField(BoardState.Field.HIT, row, col);
         }
@@ -81,6 +81,7 @@ public class StateMachineController {
 
         model.clientState.resetExceptNickname();
         model.opponentState.resetExceptNickname();
+
         String alertContent = isWinner ? "You have won." : "You have lost.";
         stageManager.showAlertLater(Alert.AlertType.INFORMATION, "Game End", alertContent);
         stageManager.setSceneLater(StageManager.Scene.Room);
@@ -97,7 +98,7 @@ public class StateMachineController {
         }
 
         clientState.isBoardReadyProperty().set(true);
-        BoardState boardState = clientState.getBoard();
+        BoardState boardState = clientState.getBoardState();
         for (int i = 1; i < message.getParametersCnt(); i++) {
             String fieldDescription = message.getParameter(i);
             BoardState.Field field = BoardState.Field.valueOf(fieldDescription);

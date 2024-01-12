@@ -5,6 +5,9 @@ import java.net.Socket;
 
 public class Communicator {
 
+    private static final char ESCAPE_CHARACTER = '\\';
+    private static final char MESSAGE_DELIMITER = 0x0A;
+
     private final Object WRITE_ACCESS = new Object();
 
     private final BufferedReader bufferedReader;
@@ -26,12 +29,12 @@ public class Communicator {
             }
 
             if (!escape) {
-                if (c == '\\') {
+                if (c == ESCAPE_CHARACTER) {
                     escape = true;
                     continue;
                 }
 
-                if (c == 0x0A) {
+                if (c == MESSAGE_DELIMITER) {
                     break;
                 }
             }
@@ -49,12 +52,12 @@ public class Communicator {
         synchronized (WRITE_ACCESS) {
             for (int i = 0; i < text.length(); i++) {
                 char c = text.charAt(i);
-                if (c == '\\' || c == 0x0A) {
-                    bufferedWriter.write('\\');
+                if (c == ESCAPE_CHARACTER || c == MESSAGE_DELIMITER) {
+                    bufferedWriter.write(ESCAPE_CHARACTER);
                 }
                 bufferedWriter.write(c);
             }
-            bufferedWriter.write(0x0A);
+            bufferedWriter.write(MESSAGE_DELIMITER);
             bufferedWriter.flush();
         }
     }

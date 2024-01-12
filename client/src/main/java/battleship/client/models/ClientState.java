@@ -15,7 +15,7 @@ public class ClientState {
     private final BooleanProperty isBoardReady = new SimpleBooleanProperty(false);
     private final BooleanProperty isOnTurn = new SimpleBooleanProperty(false);
 
-    private final BooleanProperty isResponding = new SimpleBooleanProperty(true);
+    private final BooleanProperty isResponding = new SimpleBooleanProperty(false);
 
     public StringProperty nicknameProperty() {
         return nickname;
@@ -25,7 +25,7 @@ public class ClientState {
         return isInRoom;
     }
 
-    public BoardState getBoard() {
+    public BoardState getBoardState() {
         return boardState;
     }
 
@@ -50,7 +50,6 @@ public class ClientState {
         boardState.reset();
         isBoardReady.set(false);
         isOnTurn.set(false);
-        //isResponding.set(true);
     }
 
 }

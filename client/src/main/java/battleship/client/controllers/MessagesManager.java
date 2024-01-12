@@ -1,6 +1,8 @@
 package battleship.client.controllers;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
@@ -10,7 +12,7 @@ public class MessagesManager implements Runnable {
     private final StateMachine stateMachine;
 
     private CompletableFuture<Message> future;
-    private Message.Type[] awaitedMessageTypes;
+    private Collection<Message.Type> awaitedMessageTypes;
 
     public MessagesManager(Communicator communicator, StateMachine stateMachine) {
         this.communicator = communicator;
@@ -24,7 +26,7 @@ public class MessagesManager implements Runnable {
                 Message message = communicator.receive();
 
                 if (future != null) {
-                    if (List.of(awaitedMessageTypes).contains(message.getType())) {
+                    if (awaitedMessageTypes.contains(message.getType())) {
                         future.complete(message);
                         future = null;
                     }
@@ -39,7 +41,7 @@ public class MessagesManager implements Runnable {
 
     public CompletableFuture<Message> expectMessage(Message.Type... type) {
         future = new CompletableFuture<>();
-        awaitedMessageTypes = type;
+        awaitedMessageTypes = new HashSet<>(List.of(type));
         return future;
     }
 

@@ -3,7 +3,6 @@ package battleship.client.controllers;
 import battleship.client.models.BoardState;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -70,6 +69,9 @@ public class Message {
             Map.entry(Type.BOARD_STATE, 1 + BoardState.SIZE * BoardState.SIZE)
     );
 
+    private static final char ESCAPE_CHARACTER = '\\';
+    private static final char PARAMETER_DELIMITER = '|';
+
     private final Type type;
     private final List<String> parameters;
 
@@ -98,11 +100,11 @@ public class Message {
 
         stringBuilder.append(type.name());
         for (String parameter : parameters) {
-            stringBuilder.append('|');
+            stringBuilder.append(PARAMETER_DELIMITER);
             for (int i = 0; i < parameter.length(); i++) {
                 char c = parameter.charAt(i);
-                if (c == '\\' || c == '|') {
-                    stringBuilder.append('\\');
+                if (c == ESCAPE_CHARACTER || c == PARAMETER_DELIMITER) {
+                    stringBuilder.append(ESCAPE_CHARACTER);
                 }
                 stringBuilder.append(c);
             }
@@ -112,17 +114,14 @@ public class Message {
     }
 
     public static Message Deserialize(String string) {
-        String[] parts = string.split("\\|");
-        if (parts.length == 0) {
-            throw new RuntimeException();
-        }
+        String[] parts = string.split("\\" + PARAMETER_DELIMITER );
 
         Type type;
         try {
             type = Type.valueOf(parts[0]);
         }
         catch (IllegalArgumentException e) {
-            throw new RuntimeException();
+            throw new RuntimeException(); // TODO illegal msg exc?
         }
 
         if (!PARAMETERS_COUNTS.containsKey(type)) {
@@ -144,12 +143,12 @@ public class Message {
 
             char c = string.charAt(i);
             if (!escape) {
-                if (c == '\\') {
+                if (c == ESCAPE_CHARACTER) {
                     escape = true;
                     continue;
                 }
 
-                if (c == '|') {
+                if (c == PARAMETER_DELIMITER) {
                     parameters.add(stringBuilder.toString());
                     stringBuilder = new StringBuilder();
                     continue;

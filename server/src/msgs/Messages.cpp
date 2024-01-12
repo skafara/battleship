@@ -26,10 +26,6 @@ namespace msgs {
 		return {MessageType::kLimit_Clients, lim};
 	}
 
-	/*Message Messages::Nickname_Prompt() {
-		return {MessageType::kNickname_Prompt};
-	}*/
-
 	Message Messages::Nickname_Exists() {
 		return {MessageType::kNickname_Exists};
 	}

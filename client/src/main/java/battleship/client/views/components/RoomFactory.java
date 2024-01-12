@@ -7,7 +7,6 @@ import battleship.client.models.Model;
 import battleship.client.views.Board;
 import battleship.client.views.StageManager;
 import battleship.client.views.components.forms.FormFactory;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.geometry.Insets;
@@ -154,7 +153,7 @@ public class RoomFactory {
         ApplicationState applicationState = model.applicationState;
         applicationState.roomDisableProperty().set(true);
 
-        CompletableFuture<Void> future = controller.boardReady(model.clientState.getBoard());
+        CompletableFuture<Void> future = controller.boardReady(model.clientState.getBoardState());
         future.whenCompleteAsync((value, exception) -> {
             if (exception == null) {
                 applicationState.roomDisableProperty().set(false);

@@ -80,6 +80,9 @@ public class FormLobby extends HBox {
             try {
                 throw exception;
             }
+            catch (IllegalArgumentException e) {
+                handleIllegalArgument(stageManager);
+            }
             catch (ReachedLimitException e) {
                 handleRoomFull(stageManager);
             }
@@ -118,6 +121,10 @@ public class FormLobby extends HBox {
 
             applicationState.lobbyDisableProperty().set(false);
         });
+    }
+
+    private void handleIllegalArgument(StageManager stageManager) {
+        stageManager.showAlertLater(Alert.AlertType.ERROR, "Invalid Room Code", "Check the validity of the room code format.");
     }
 
     private void handleRoomLimit(StageManager stageManager, ReachedLimitException e) {
