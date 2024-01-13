@@ -18,6 +18,11 @@ public class StateMachine implements Runnable {
         try {
             for (;;) {
                 Message msg = messages.take();
+
+                if (Thread.interrupted()) {
+                    throw new InterruptedException();
+                }
+
                 System.out.println("StateMachine: " + msg.Serialize());
 
                 Consumer<Message> handler;

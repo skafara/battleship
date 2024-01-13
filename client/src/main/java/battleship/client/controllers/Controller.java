@@ -24,7 +24,7 @@ public class Controller {
     private static final int SOCKET_CONNECTION_TIMEOUT_MS = 10_000;
     private static final int RECONNECT_TIMEOUT_MS = 30_000;
     private static final int ROOM_CODE_LENGTH = 4;
-    public static final int RECONNECT_ATTEMPT_SLEEP_MS = 1000;
+    public static final int RECONNECT_ATTEMPT_SLEEP_MS = 5_000;
 
     private final Model model;
 
@@ -288,17 +288,23 @@ public class Controller {
         model.applicationState.setControlsDisable(true);
         model.clientState.isRespondingProperty().set(false);
 
+        socket = new Socket();
+        messagesManagerThread.interrupt();
+        keepAliveThread.interrupt();
+        stateMachineThread.interrupt();
+
         boolean isReconnected = false;
         long start = System.currentTimeMillis();
         for (long now = System.currentTimeMillis(); now < start + RECONNECT_TIMEOUT_MS; now = System.currentTimeMillis()) {
             try {
-                socket = new Socket();
                 socket.connect(new InetSocketAddress(model.applicationState.serverAddressProperty().get(), Integer.parseInt(model.applicationState.serverPortProperty().get())), SOCKET_CONNECTION_TIMEOUT_MS);
                 communicator = new Communicator(socket);
+                stateMachine = new StateMachine(new StateMachineController(model, stageManager));
                 messagesManager = new MessagesManager(communicator, stateMachine, this::reconnect);
 
                 keepAliveThread = new Thread(new KeepAlive(communicator));
                 messagesManagerThread = new Thread(messagesManager);
+                stateMachineThread = new Thread(stateMachine);
 
                 CompletableFuture<Message> welcomeFuture = expectMessage(Message.Type.WELCOME, Message.Type.LIMIT_CLIENTS);
                 messagesManagerThread.start();
@@ -321,9 +327,11 @@ public class Controller {
                 }
 
                 model.applicationState.setControlsDisable(false);
+                model.opponentState.isRespondingProperty().set(true);
                 model.clientState.isRespondingProperty().set(true);
 
                 keepAliveThread.start();
+                stateMachineThread.start();
                 isReconnected = true;
                 break;
             } catch (IOException | TimeoutException | ReachedLimitException | ExistsException e) {
