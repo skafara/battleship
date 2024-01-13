@@ -322,7 +322,7 @@ public class Controller {
 
         boolean isReconnected = false;
         long start = System.currentTimeMillis();
-        for (long now = System.currentTimeMillis(); now < start + 15_000; now = System.currentTimeMillis()) {
+        for (long now = System.currentTimeMillis(); now < start + 30_000; now = System.currentTimeMillis()) {
             try {
                 socket = new Socket();
                 socket.connect(new InetSocketAddress(model.applicationState.serverAddressProperty().get(), Integer.parseInt(model.applicationState.serverPortProperty().get())), SOCKET_CONNECTION_TIMEOUT_MS);
@@ -377,6 +377,9 @@ public class Controller {
             stageManager.setSceneLater(StageManager.Scene.Index);
             stageManager.showAlertLater(Alert.AlertType.ERROR, "Connection Problems", "There are problems connecting to the server. Please try again.");
         }
+        System.out.println();
+        System.out.println("Reconnected");
+        System.out.println();
     }
 
     public void sendMessage(Message message) throws IOException {
