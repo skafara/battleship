@@ -368,9 +368,14 @@ public class Controller {
             System.out.println("Recv From Server: " + message.Serialize());
             return message;
         } catch (ExecutionException | InterruptedException e) {
-            if (e.getCause() instanceof IOException) {
-                throw new IOException();
+            Throwable cause = e.getCause();
+            if (cause instanceof IOException) {
+                throw (IOException) cause;
             }
+            else if (cause instanceof TimeoutException) {
+                throw (TimeoutException) cause;
+            }
+
             throw new RuntimeException(e);
         }
     }
