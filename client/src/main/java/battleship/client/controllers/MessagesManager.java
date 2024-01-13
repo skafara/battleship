@@ -27,6 +27,10 @@ public class MessagesManager implements Runnable {
             for (;;) {
                 Message message = communicator.receive();
 
+                if (Thread.interrupted()) {
+                    break;
+                }
+
                 if (future != null) {
                     if (awaitedMessageTypes.contains(message.getType())) {
                         future.complete(message);
