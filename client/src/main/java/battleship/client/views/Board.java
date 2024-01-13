@@ -28,6 +28,7 @@ public class Board extends GridPane {
     private static final int CELL_SIZE = 24;
     private static final int STROKE_WIDTH = 1;
     private static final Color GRAY = Color.rgb(160, 160, 160);
+    private static final Color YELLOW = Color.rgb(237, 234, 182);
 
     public Board(Model model, Controller controller, boolean isClient, BooleanBinding isInGame) {
         ClientState clientState = isClient ? model.clientState : model.opponentState;
@@ -125,8 +126,8 @@ public class Board extends GridPane {
                         text.setText("X");
                         text.setFill(Color.RED);
                     }
-                    case MISS -> {
-                        rectangle.setFill(Color.TRANSPARENT);
+                    case MISS, INVALIDATED -> {
+                        rectangle.setFill(YELLOW);
                         text.setText("•");
                     }
                 }

@@ -62,14 +62,17 @@ namespace msgs {
 
 		enum class Field {
 			kNone,
-			kShip
+			kShip,
+			kInvalidated
 		};
 
 		static std::string Get_Field_Description(Field field) {
 			if (field == Field::kNone) {
 				return "NONE";
-			} else {
+			} else if (field == Field::kShip) {
 				return "SHIP";
+			} else {
+				return "INVALIDATED";
 			}
 		}
 
@@ -98,6 +101,7 @@ namespace msgs {
 		static Message Opponent_Rejoin();
 		static Message Rejoin(State state, const std::string &code);
 		static Message Board_State(Client client, const game::Board &board);
+		static Message Invalidate_Field(Client client, size_t row, size_t col);
 	};
 
 } // msgs

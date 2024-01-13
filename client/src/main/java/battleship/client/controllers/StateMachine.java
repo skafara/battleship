@@ -38,6 +38,7 @@ public class StateMachine implements Runnable {
                     case GAME_END -> handler = stateMachineController::handleGameEnd;
                     case OPPONENT_REJOIN -> handler = stateMachineController::handleOpponentRejoin;
                     case BOARD_STATE -> handler = stateMachineController::handleBoardState;
+                    case INVALIDATE_FIELD -> handler = stateMachineController::handleInvalidateField;
                     default -> {
                         continue;
                     }

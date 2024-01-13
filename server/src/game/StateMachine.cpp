@@ -275,12 +275,20 @@ namespace game {
 			Client &opponent = room->Get_Opponent(*_client);
 			Board &board = room->Get_Board(opponent);
 			if (board.Is_Guess(field_pos.first, field_pos.second)) {
-				throw std::invalid_argument{"Guessing Previously Guessed Fields"};
+				throw std::invalid_argument{"Guessing Previously Guessed Field"};
+			}
+			if (board.Is_Invalidated(field_pos.first, field_pos.second)) {
+				throw std::invalid_argument{"Guessing Previously Invalidated Field"};
 			}
 
 			if (board.Turn(field_pos.first, field_pos.second)) {
 				_client->Send_Msg(msgs::Messages::Turn_Result(field_pos.first, field_pos.second, msgs::Messages::Turn_Res::kHit));
 				opponent.Send_Msg(msgs::Messages::Opponent_Turn(field_pos.first, field_pos.second, msgs::Messages::Turn_Res::kHit));
+
+				for (const std::pair<size_t, size_t> &invalidated_field_pos : board.Get_Latest_Invalidated()) {
+					_client->Send_Msg(msgs::Messages::Invalidate_Field(msgs::Messages::Client::kOpponent, invalidated_field_pos.first, invalidated_field_pos.second));
+					opponent.Send_Msg(msgs::Messages::Invalidate_Field(msgs::Messages::Client::kYou, invalidated_field_pos.first, invalidated_field_pos.second));
+				}
 
 				if (board.Is_All_Ships_Guessed()) {
 					_client->Send_Msg(msgs::Messages::Game_End(msgs::Messages::Client::kYou));

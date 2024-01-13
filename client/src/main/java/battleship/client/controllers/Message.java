@@ -39,7 +39,8 @@ public class Message {
         GAME_END,
         REJOIN,
         OPPONENT_REJOIN,
-        BOARD_STATE
+        BOARD_STATE,
+        INVALIDATE_FIELD
     }
 
     private static final Map<Type, Integer> PARAMETERS_COUNTS = Map.ofEntries(
@@ -67,7 +68,8 @@ public class Message {
             Map.entry(Type.GAME_END, 1),
             Map.entry(Type.REJOIN, 2),
             Map.entry(Type.OPPONENT_REJOIN, 0),
-            Map.entry(Type.BOARD_STATE, 1 + BoardState.SIZE * BoardState.SIZE)
+            Map.entry(Type.BOARD_STATE, 1 + BoardState.SIZE * BoardState.SIZE),
+            Map.entry(Type.INVALIDATE_FIELD, 2)
     );
 
     private static final char ESCAPE_CHARACTER = '\\';

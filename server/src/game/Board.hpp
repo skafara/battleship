@@ -19,7 +19,10 @@ namespace game {
 
 		bool Is_Guess(size_t row, size_t col) const;
 		bool Is_Ship(size_t row, size_t col) const;
+		bool Is_Invalidated(size_t row, size_t col) const;
 		bool Is_All_Ships_Guessed() const;
+
+		const std::vector<std::pair<size_t, size_t>> &Get_Latest_Invalidated() const;
 
 		bool Turn(size_t row, size_t col);
 
@@ -30,7 +33,10 @@ namespace game {
 		static const std::map<size_t, size_t> kShips_Sizes_Cnts;
 
 		std::array<bool, kSize * kSize> _ships;
+		std::array<bool, kSize * kSize> _invalidated;
 		std::array<bool, kSize * kSize> _guesses;
+
+		std::vector<std::pair<size_t, size_t>> _latest_invalidated;
 
 		static size_t Get_Field_Idx(size_t row, size_t col);
 	};

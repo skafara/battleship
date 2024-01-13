@@ -113,7 +113,8 @@ namespace msgs {
 				if (board.Is_Ship(row, col)) {
 					if (board.Is_Guess(row, col)) {
 						msg.Store_Param(Get_Turn_Res_Description(Turn_Res::kHit));
-					} else {
+					}
+					else {
 						if (client == Client::kYou) {
 							msg.Store_Param(Get_Field_Description(Field::kShip));
 						}
@@ -124,13 +125,21 @@ namespace msgs {
 				} else {
 					if (board.Is_Guess(row, col)) {
 						msg.Store_Param(Get_Turn_Res_Description(Turn_Res::kMiss));
-					} else {
+					}
+					else if (board.Is_Invalidated(row, col)) {
+						msg.Store_Param(Get_Field_Description(Field::kInvalidated));
+					}
+					else {
 						msg.Store_Param(Get_Field_Description(Field::kNone));
 					}
 				}
 			}
 		}
 		return msg;
+	}
+
+	Message Messages::Invalidate_Field(Messages::Client client, size_t row, size_t col) {
+		return {MessageType::kInvalidate_Field, Get_Client_Description(client), game::Board::Serialize_Field(row, col)};
 	}
 
 } // msgs

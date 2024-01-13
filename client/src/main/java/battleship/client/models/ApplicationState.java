@@ -7,7 +7,7 @@ import javafx.beans.property.StringProperty;
 
 public class ApplicationState {
 
-    private static final boolean IS_DEBUG = false;
+    private static final boolean IS_DEBUG = true;
 
     private final BooleanProperty indexDisable = new SimpleBooleanProperty(false);
     private final BooleanProperty lobbyDisable = new SimpleBooleanProperty(false);
@@ -16,7 +16,7 @@ public class ApplicationState {
     private final StringProperty serverAddress = new SimpleStringProperty(IS_DEBUG ? "localhost" : "");
     private final StringProperty serverPort = new SimpleStringProperty(IS_DEBUG ? "50000" : "");
     private final StringProperty nickname = new SimpleStringProperty(IS_DEBUG ? "nickname" : "");
-    private final StringProperty roomCode = new SimpleStringProperty("7938");
+    private final StringProperty roomCode = new SimpleStringProperty(IS_DEBUG ? "7938" : "");
 
     public BooleanProperty indexDisableProperty() {
         return indexDisable;

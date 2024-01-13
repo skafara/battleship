@@ -53,7 +53,8 @@ namespace msgs {
 		kOpponent_No_Response,
 		kOpponent_Rejoin,
 		kRejoin,
-		kBoard_State
+		kBoard_State,
+		kInvalidate_Field
 	};
 
 	static const std::map<MessageType, const std::string> kMessageType_String {
@@ -89,6 +90,7 @@ namespace msgs {
 		{MessageType::kOpponent_Rejoin, "OPPONENT_REJOIN"},
 		{MessageType::kRejoin, "REJOIN"},
 		{MessageType::kBoard_State, "BOARD_STATE"},
+		{MessageType::kInvalidate_Field, "INVALIDATE_FIELD"}
 	};
 
 	static const std::map<MessageType, const size_t> kMessageType_Params_Cnt{

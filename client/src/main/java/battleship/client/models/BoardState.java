@@ -13,7 +13,8 @@ public class BoardState {
         NONE,
         SHIP,
         HIT,
-        MISS
+        MISS,
+        INVALIDATED
     }
 
     public static final int SIZE = 10;
@@ -67,6 +68,10 @@ public class BoardState {
     public boolean isGuess(int row, int col) {
         Field field = getField(row, col);
         return field == Field.HIT || field == Field.MISS;
+    }
+    
+    public boolean isInvalidated(int row, int col) {
+        return getField(row, col) == Field.INVALIDATED;
     }
 
     public void setField(Field field, int row, int col) {

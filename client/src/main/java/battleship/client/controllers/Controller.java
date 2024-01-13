@@ -254,7 +254,7 @@ public class Controller {
     public CompletableFuture<Void> turn(int row, int col) {
         CompletableFuture<Void> future = new CompletableFuture<>();
         BoardState boardState = model.opponentState.getBoardState();
-        if (boardState.isGuess(row, col)) {
+        if (boardState.isGuess(row, col) || boardState.isInvalidated(row, col)) {
             future.completeExceptionally(new IllegalArgumentException());
             return future;
         }

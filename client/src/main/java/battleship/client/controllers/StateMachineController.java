@@ -104,4 +104,15 @@ public class StateMachineController {
             boardState.setField(field, i - 1);
         }
     }
+
+    public void handleInvalidateField(Message message) {
+        BoardState boardState = model.opponentState.getBoardState();
+        if (message.getParameter(0).equals("YOU")) {
+            boardState = model.clientState.getBoardState();
+        }
+        String field = message.getParameter(1);
+        int row = field.charAt(0) - '0';
+        int col = field.charAt(1) - '0';
+        boardState.setField(BoardState.Field.INVALIDATED, row, col);
+    }
 }
