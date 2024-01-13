@@ -38,6 +38,8 @@ public class MessagesManager implements Runnable {
             }
         } catch (IOException e) {
             System.err.println("Stop MessagesManager Thread: " + e.getMessage());
+            System.err.println("Start Reconnect Thread");
+            new Thread(onIOXeception).start();
         }
     }
 
