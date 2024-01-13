@@ -18,7 +18,7 @@ public class BoardState {
 
     public static final int SIZE = 10;
 
-    private static final boolean IS_DEBUG = true;
+    private static final boolean IS_DEBUG = false;
     private static final Map<Integer, Integer> SHIPS_SIZES_CNTS = IS_DEBUG ? Map.of(
             1, 2
     ) : Map.of(

@@ -9,7 +9,7 @@ namespace game {
 
 	class Board {
 	public:
-		static constexpr bool kIs_Debug = true;
+		static constexpr bool kIs_Debug = false;
 		static constexpr size_t kShip_Fields_Cnt = kIs_Debug ? 2 : 20;
 
 		static constexpr size_t kSize = 10;
