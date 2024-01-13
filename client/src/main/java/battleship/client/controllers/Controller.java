@@ -363,7 +363,7 @@ public class Controller {
                 System.err.println("Reconnect Exception: Trying Again in 5s");
                 try {
                     Thread.sleep(5000);
-                } catch (InterruptedException e) {
+                } catch (InterruptedException ex) {
                     System.out.println("Reconnect Method Interrupted");
                 }
             } catch (RuntimeException e) {
