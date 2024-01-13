@@ -10,7 +10,7 @@ public class MessagesManager implements Runnable {
 
     private final Communicator communicator;
     private final StateMachine stateMachine;
-    private final Runnable onIOXeception;
+    private final Runnable onIOException;
 
     private CompletableFuture<Message> future;
     private Collection<Message.Type> awaitedMessageTypes;
@@ -18,7 +18,7 @@ public class MessagesManager implements Runnable {
     public MessagesManager(Communicator communicator, StateMachine stateMachine, Runnable onIOException) {
         this.communicator = communicator;
         this.stateMachine = stateMachine;
-        this.onIOXeception = onIOException;
+        this.onIOException = onIOException;
     }
 
     @Override
@@ -28,7 +28,7 @@ public class MessagesManager implements Runnable {
                 Message message = communicator.receive();
 
                 if (Thread.interrupted()) {
-                    break;
+                    return;
                 }
 
                 if (future != null) {
@@ -41,9 +41,12 @@ public class MessagesManager implements Runnable {
                 }
             }
         } catch (IOException e) {
-            System.err.println("Stop MessagesManager Thread: " + e.getMessage());
-            System.err.println("Start Reconnect Thread");
-            new Thread(onIOXeception).start();
+            System.out.println(e.getClass().getName() + " " + e.getMessage());
+            if (Thread.interrupted()) {
+                return;
+            }
+
+            new Thread(onIOException).start();
         }
     }
 

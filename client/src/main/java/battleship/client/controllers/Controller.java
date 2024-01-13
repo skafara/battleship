@@ -22,7 +22,9 @@ public class Controller {
 
     private static final int RECEIVE_MSG_TIMEOUT_MS = 15_000;
     private static final int SOCKET_CONNECTION_TIMEOUT_MS = 10_000;
+    private static final int RECONNECT_TIMEOUT_MS = 30_000;
     private static final int ROOM_CODE_LENGTH = 4;
+    public static final int RECONNECT_ATTEMPT_SLEEP_MS = 1000;
 
     private final Model model;
 
@@ -93,12 +95,7 @@ public class Controller {
                     stateMachineThread.start();
                     future.complete(null);
                 }
-                catch (IOException e) {
-                    System.err.println("Socket Exception (connect)");
-                    future.completeExceptionally(e);
-                }
-                catch (TimeoutException e) {
-                    System.err.println("Timeout (connect)");
+                catch (IOException | TimeoutException e) {
                     future.completeExceptionally(e);
                 }
                 catch (RuntimeException e) {
@@ -130,13 +127,7 @@ public class Controller {
                     future.completeExceptionally(new ReachedLimitException(Integer.parseInt(response.getParameter(0))));
                 }
             }
-            catch (IOException e) {
-                // socket
-                System.err.println("socket");
-                future.completeExceptionally(e);
-            }
-            catch (TimeoutException e) {
-                System.err.println("timeout");
+            catch (IOException | TimeoutException e) {
                 reconnect();
                 future.completeExceptionally(e);
             }
@@ -177,13 +168,8 @@ public class Controller {
                     future.completeExceptionally(new NotExistsException());
                 }
             }
-            catch (IOException e) {
-                // socket
-                System.err.println("socket");
-                future.completeExceptionally(e);
-            }
-            catch (TimeoutException e) {
-                System.err.println("timeout");
+            catch (IOException | TimeoutException e) {
+                reconnect();
                 future.completeExceptionally(e);
             }
             catch (RuntimeException e) {
@@ -208,13 +194,8 @@ public class Controller {
                 model.opponentState.reset();
                 future.complete(null);
             }
-            catch (IOException e) {
-                // socket
-                System.err.println("socket");
-                future.completeExceptionally(e);
-            }
-            catch (TimeoutException e) {
-                System.err.println("timeout");
+            catch (IOException | TimeoutException e) {
+                reconnect();
                 future.completeExceptionally(e);
             }
             catch (RuntimeException e) {
@@ -247,13 +228,8 @@ public class Controller {
                     future.completeExceptionally(new IllegalArgumentException());
                 }
             }
-            catch (IOException e) {
-                // socket
-                System.err.println("socket");
-                future.completeExceptionally(e);
-            }
-            catch (TimeoutException e) {
-                System.err.println("timeout");
+            catch (IOException | TimeoutException e) {
+                reconnect();
                 future.completeExceptionally(e);
             }
             catch (RuntimeException e) {
@@ -295,13 +271,8 @@ public class Controller {
                     future.completeExceptionally(new IllegalStateException());
                 }
             }
-            catch (IOException e) {
-                // socket
-                System.err.println("socket");
-                future.completeExceptionally(e);
-            }
-            catch (TimeoutException e) {
-                System.err.println("timeout");
+            catch (IOException | TimeoutException e) {
+                reconnect();
                 future.completeExceptionally(e);
             }
             catch (RuntimeException e) {
@@ -314,15 +285,12 @@ public class Controller {
     }
 
     private void reconnect() {
-        System.out.println();
-        System.out.println("Reconnect Method");
-        System.out.println();
         model.applicationState.setControlsDisable(true);
         model.clientState.isRespondingProperty().set(false);
 
         boolean isReconnected = false;
         long start = System.currentTimeMillis();
-        for (long now = System.currentTimeMillis(); now < start + 30_000; now = System.currentTimeMillis()) {
+        for (long now = System.currentTimeMillis(); now < start + RECONNECT_TIMEOUT_MS; now = System.currentTimeMillis()) {
             try {
                 socket = new Socket();
                 socket.connect(new InetSocketAddress(model.applicationState.serverAddressProperty().get(), Integer.parseInt(model.applicationState.serverPortProperty().get())), SOCKET_CONNECTION_TIMEOUT_MS);
@@ -360,11 +328,10 @@ public class Controller {
                 break;
             } catch (IOException | TimeoutException | ReachedLimitException | ExistsException e) {
                 messagesManagerThread.interrupt();
-                System.err.println("Reconnect Exception: Trying Again in 5s");
                 try {
-                    Thread.sleep(5000);
+                    Thread.sleep(RECONNECT_ATTEMPT_SLEEP_MS);
                 } catch (InterruptedException ex) {
-                    System.out.println("Reconnect Method Interrupted");
+                    //
                 }
             } catch (RuntimeException e) {
                 handleRuntimeException();
@@ -377,9 +344,6 @@ public class Controller {
             stageManager.setSceneLater(StageManager.Scene.Index);
             stageManager.showAlertLater(Alert.AlertType.ERROR, "Connection Problems", "There are problems connecting to the server. Please try again.");
         }
-        System.out.println();
-        System.out.println("Reconnected");
-        System.out.println();
     }
 
     public void sendMessage(Message message) throws IOException {

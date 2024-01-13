@@ -62,12 +62,16 @@ public class Board extends GridPane {
         setMaxSize((BOARD_SIZE + 1) * CELL_SIZE, (BOARD_SIZE + 1) * CELL_SIZE);
 
         if (isClient) {
-            disableProperty().bind(clientState.isBoardReadyProperty());
+            disableProperty().bind(Bindings.createBooleanBinding(() -> {
+                return applicationState.roomDisableProperty().get() || clientState.isBoardReadyProperty().get();
+            }, applicationState.roomDisableProperty(), clientState.isBoardReadyProperty()));
         }
         else {
             disableProperty().bind(Bindings.createBooleanBinding(() -> {
-                    return !isInGame.get() || clientState.isOnTurnProperty().get();
-            }, isInGame, clientState.isOnTurnProperty()));
+                    return applicationState.roomDisableProperty().get() ||
+                           !isInGame.get() ||
+                           clientState.isOnTurnProperty().get();
+            }, applicationState.roomDisableProperty(), isInGame, clientState.isOnTurnProperty()));
         }
 
         clientState.getBoardState().getBoard().addListener((ListChangeListener<BoardState.Field>) change -> {
