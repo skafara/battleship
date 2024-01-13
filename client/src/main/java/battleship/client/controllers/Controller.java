@@ -99,7 +99,6 @@ public class Controller {
                 }
                 catch (TimeoutException e) {
                     System.err.println("Timeout (connect)");
-                    keepAliveThread.interrupt();
                     future.completeExceptionally(e);
                 }
                 catch (RuntimeException e) {
@@ -318,7 +317,9 @@ public class Controller {
         model.applicationState.setControlsDisable(true);
         model.clientState.isRespondingProperty().set(false);
 
-        new Thread(() -> {
+        boolean isReconnected = false;
+        long start = System.currentTimeMillis();
+        for (long now = System.currentTimeMillis(); now < start + 15_000; now = System.currentTimeMillis()) {
             try {
                 socket = new Socket();
                 socket.connect(new InetSocketAddress(model.applicationState.serverAddressProperty().get(), Integer.parseInt(model.applicationState.serverPortProperty().get())), SOCKET_CONNECTION_TIMEOUT_MS);
@@ -341,11 +342,9 @@ public class Controller {
                 Message message = awaitMessage(responseFuture);
                 if (message.getType() == Message.Type.ACK) {
                     stageManager.setSceneLater(StageManager.Scene.Lobby);
-                }
-                else if (message.getType() == Message.Type.NICKNAME_EXISTS) {
+                } else if (message.getType() == Message.Type.NICKNAME_EXISTS) {
                     throw new ExistsException();
-                }
-                else {
+                } else {
                     model.applicationState.roomCodeProperty().set(message.getParameter(1));
                     stageManager.setSceneLater(StageManager.Scene.Room);
                 }
@@ -354,24 +353,21 @@ public class Controller {
                 model.clientState.isRespondingProperty().set(true);
 
                 keepAliveThread.start();
-            }
-            catch (IOException e) {
-                System.err.println("Socket Exception (reconnect)");
-            }
-            catch (TimeoutException e) {
-                System.err.println("Timeout (reconnect)");
-                keepAliveThread.interrupt();
-            }
-            catch (ReachedLimitException e) {
-                System.out.println("Nickname Exists (reconnect)");
-            }
-            catch (ExistsException e) {
-                System.out.println("Nickname Exists (reconnect)");
-            }
-            catch (RuntimeException e) {
+                isReconnected = true;
+                break;
+            } catch (IOException | TimeoutException | ReachedLimitException | ExistsException e) {
+                System.err.println("Reconnect Exception: Trying Again");
+            } catch (RuntimeException e) {
                 handleRuntimeException();
+                break;
             }
-        }).start();
+        }
+
+        if (!isReconnected) {
+            model.reset();
+            stageManager.setSceneLater(StageManager.Scene.Index);
+            stageManager.showAlertLater(Alert.AlertType.ERROR, "Connection Problems", "There are problems connecting to the server. Please try again.");
+        }
     }
 
     public void sendMessage(Message message) throws IOException {
@@ -387,7 +383,7 @@ public class Controller {
         try {
             Message message = future.get(RECEIVE_MSG_TIMEOUT_MS, TimeUnit.MILLISECONDS); // throws TimeoutException
             System.out.println("Recv From Server: " + message.Serialize());
-            return message; // TODO if CONN_TERM throw ConnectionTerminatedException?
+            return message;
         } catch (ExecutionException | InterruptedException e) {
             if (e.getCause() instanceof IOException) {
                 throw new IOException();

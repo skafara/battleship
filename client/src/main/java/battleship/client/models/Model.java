@@ -12,7 +12,7 @@ public class Model {
 
     public void reset() {
         applicationState.reset();
-        clientState.reset();
+        clientState.resetExceptNickname();
         opponentState.reset();
     }
 }
