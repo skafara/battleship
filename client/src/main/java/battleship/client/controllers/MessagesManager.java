@@ -5,30 +5,49 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class MessagesManager implements Runnable {
 
     private final Communicator communicator;
     private final StateMachine stateMachine;
-    private final Runnable onIOException;
+    private final Runnable onConnectionError;
+    private long lastActive;
 
     private CompletableFuture<Message> future;
     private Collection<Message.Type> awaitedMessageTypes;
 
-    public MessagesManager(Communicator communicator, StateMachine stateMachine, Runnable onIOException) {
+    public MessagesManager(Communicator communicator, StateMachine stateMachine, Runnable onConnectionError) {
         this.communicator = communicator;
         this.stateMachine = stateMachine;
-        this.onIOException = onIOException;
+        this.onConnectionError = onConnectionError;
     }
 
     @Override
     public void run() {
         try {
+            lastActive = System.currentTimeMillis();
             for (;;) {
-                Message message = communicator.receive();
+                CompletableFuture<Message> futureMessage = new CompletableFuture<>();
+                new Thread(() -> {
+                    try {
+                        futureMessage.complete(communicator.receive());
+                    } catch (IOException e) {
+                        futureMessage.completeExceptionally(e);
+                    }
+                }).start();
+
+                Message message = futureMessage.get(lastActive - System.currentTimeMillis() + 15_000, TimeUnit.MILLISECONDS);
+                lastActive = System.currentTimeMillis();
 
                 if (Thread.interrupted()) {
-                    return;
+                    throw new InterruptedException();
+                }
+
+                if (message.getType() == Message.Type.KEEP_ALIVE) {
+                    continue;
                 }
 
                 if (future != null) {
@@ -40,13 +59,31 @@ public class MessagesManager implements Runnable {
                     stateMachine.enqueueMessage(message);
                 }
             }
-        } catch (IOException e) {
-            System.out.println(e.getClass().getName() + " " + e.getMessage());
+        }
+        catch (TimeoutException e) {
             if (Thread.interrupted()) {
                 return;
             }
 
-            new Thread(onIOException).start();
+            if (future != null) {
+                future.completeExceptionally(new TimeoutException());
+            }
+            else {
+                new Thread(onConnectionError).start();
+            }
+        }
+        catch (ExecutionException e) {
+            if (e.getCause() instanceof IOException) {
+                if (future != null) {
+                    future.completeExceptionally(e.getCause());
+                }
+                else {
+                    new Thread(onConnectionError).start();
+                }
+            }
+        }
+        catch (InterruptedException e) {
+            //
         }
     }
 

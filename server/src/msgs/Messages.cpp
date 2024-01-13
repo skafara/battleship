@@ -18,6 +18,10 @@ namespace msgs {
 		return {MessageType::kAck};
 	}
 
+	Message Messages::Keep_Alive() {
+		return {MessageType::kKeep_Alive};
+	}
+
 	Message Messages::Conn_Term() {
 		return {MessageType::kConn_Term};
 	}

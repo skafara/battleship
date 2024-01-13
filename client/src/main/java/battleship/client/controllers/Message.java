@@ -44,6 +44,7 @@ public class Message {
 
     private static final Map<Type, Integer> PARAMETERS_COUNTS = Map.ofEntries(
             Map.entry(Type.WELCOME, 4),
+            Map.entry(Type.KEEP_ALIVE, 0),
             Map.entry(Type.CONN_TERM, 0),
             Map.entry(Type.LIMIT_CLIENTS, 1),
             Map.entry(Type.ACK, 0),

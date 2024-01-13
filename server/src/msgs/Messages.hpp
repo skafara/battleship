@@ -75,6 +75,7 @@ namespace msgs {
 
 		static Message Welcome();
 		static Message Ack();
+		static Message Keep_Alive();
 		static Message Conn_Term();
 		static Message Limit_Clients(size_t lim);
 		static Message Nickname_Exists();

@@ -17,6 +17,7 @@ Server::Server(const std::string &addr, uint16_t port, size_t lim_clients, size_
 #include "iostream"
 void Server::Serve() {
 	std::thread th_clients_terminator{&Server::Clients_Terminator, this};
+	std::thread th_clients_alive_keeper{&Server::Clients_Alive_Keeper, this};
 
 	for (;;) {
 		try {
@@ -245,5 +246,23 @@ void Server::Clients_Terminator() {
 
 		lck.unlock();
 		std::this_thread::sleep_until(min_no_terminate_time_point + Timeout_Long);
+	}
+}
+
+void Server::Clients_Alive_Keeper() const {
+	for (;;) {
+		std::unique_lock lck{Get_Mutex()};
+		if (_clients.empty()) {
+			lck.unlock();
+			std::this_thread::sleep_for(Interval_Keep_Alive);
+			continue;
+		}
+
+		for (const std::shared_ptr<game::Client> &client : _clients) {
+			client->Send_Msg(msgs::Messages::Keep_Alive());
+		}
+
+		lck.unlock();
+		std::this_thread::sleep_for(Interval_Keep_Alive);
 	}
 }

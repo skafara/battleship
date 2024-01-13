@@ -37,6 +37,7 @@ public:
 private:
 	static constexpr bool kIs_Timeout_Debug = false;
 	static constexpr std::chrono::minutes Timeout_Long{kIs_Timeout_Debug ? 5 : 2};
+	static constexpr std::chrono::seconds Interval_Keep_Alive{5};
 
 	const size_t _lim_clients;
 	const size_t _lim_rooms;
@@ -53,5 +54,6 @@ private:
 	void Refuse_Connection(std::unique_ptr<ntwrk::Socket> sock) const;
 
 	void Serve_Client(std::shared_ptr<game::Client> client);
+	void Clients_Alive_Keeper() const;
 	void Clients_Terminator();
 };
