@@ -22,7 +22,7 @@ public class Controller {
 
     private static final int RECEIVE_MSG_TIMEOUT_MS = 15_000;
     private static final int SOCKET_CONNECTION_TIMEOUT_MS = 10_000;
-    private static final int RECONNECT_TIMEOUT_MS = 30_000;
+    private static final int RECONNECT_TIMEOUT_MS = 60_000;
     private static final int ROOM_CODE_LENGTH = 4;
     public static final int RECONNECT_ATTEMPT_SLEEP_MS = 5_000;
 
@@ -349,7 +349,7 @@ public class Controller {
         if (!isReconnected) {
             model.reset();
             stageManager.setSceneLater(StageManager.Scene.Index);
-            stageManager.showAlertLater(Alert.AlertType.ERROR, "Connection Problems", "There are problems connecting to the server. Please try again.");
+            stageManager.showAlertLater(Alert.AlertType.ERROR, "Connection Error", "There are problems connecting to the server. Please try again.");
         }
     }
 

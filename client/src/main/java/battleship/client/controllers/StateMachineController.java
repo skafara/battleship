@@ -17,8 +17,7 @@ public class StateMachineController {
     }
 
     public void handleConnTerm(Message message) {
-        stageManager.showAlertLater(Alert.AlertType.ERROR, "Connection Terminated", "Server has terminated the connection. Please connect to the server again.");
-        stageManager.setSceneLater(StageManager.Scene.Index);
+
     }
 
     public void handleOpponentNicknameSet(Message message) {
