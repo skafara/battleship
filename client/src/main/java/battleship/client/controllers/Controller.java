@@ -314,6 +314,9 @@ public class Controller {
     }
 
     private void reconnect() {
+        System.out.println();
+        System.out.println("Reconnect Method");
+        System.out.println();
         model.applicationState.setControlsDisable(true);
         model.clientState.isRespondingProperty().set(false);
 
@@ -357,7 +360,12 @@ public class Controller {
                 break;
             } catch (IOException | TimeoutException | ReachedLimitException | ExistsException e) {
                 messagesManagerThread.interrupt();
-                System.err.println("Reconnect Exception: Trying Again");
+                System.err.println("Reconnect Exception: Trying Again in 5s");
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    System.out.println("Reconnect Method Interrupted");
+                }
             } catch (RuntimeException e) {
                 handleRuntimeException();
                 break;
