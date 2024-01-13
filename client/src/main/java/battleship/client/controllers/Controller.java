@@ -29,6 +29,7 @@ public class Controller {
     private Socket socket;
     private Communicator communicator;
     private MessagesManager messagesManager;
+    private StateMachine stateMachine;
 
     private Thread keepAliveThread;
     private Thread messagesManagerThread;
@@ -57,8 +58,8 @@ public class Controller {
                     socket = new Socket();
                     socket.connect(new InetSocketAddress(address, port_), SOCKET_CONNECTION_TIMEOUT_MS);
                     communicator = new Communicator(socket);
-                    StateMachine stateMachine = new StateMachine(new StateMachineController(model, stageManager));
-                    messagesManager = new MessagesManager(communicator, stateMachine);
+                    stateMachine = new StateMachine(new StateMachineController(model, stageManager));
+                    messagesManager = new MessagesManager(communicator, stateMachine, this::reconnect);
 
                     keepAliveThread = new Thread(new KeepAlive(communicator));
                     messagesManagerThread = new Thread(messagesManager);
@@ -137,6 +138,7 @@ public class Controller {
             }
             catch (TimeoutException e) {
                 System.err.println("timeout");
+                reconnect();
                 future.completeExceptionally(e);
             }
             catch (RuntimeException e) {
@@ -312,6 +314,66 @@ public class Controller {
         return future;
     }
 
+    private void reconnect() {
+        model.applicationState.setControlsDisable(true);
+        model.clientState.isRespondingProperty().set(false);
+
+        new Thread(() -> {
+            try {
+                socket = new Socket();
+                socket.connect(new InetSocketAddress(model.applicationState.serverAddressProperty().get(), Integer.parseInt(model.applicationState.serverPortProperty().get())), SOCKET_CONNECTION_TIMEOUT_MS);
+                communicator = new Communicator(socket);
+                messagesManager = new MessagesManager(communicator, stateMachine, this::reconnect);
+
+                keepAliveThread = new Thread(new KeepAlive(communicator));
+                messagesManagerThread = new Thread(messagesManager);
+
+                CompletableFuture<Message> welcomeFuture = expectMessage(Message.Type.WELCOME, Message.Type.LIMIT_CLIENTS);
+                messagesManagerThread.start();
+                Message welcomeMessage = awaitMessage(welcomeFuture);
+                if (welcomeMessage.getType() == Message.Type.LIMIT_CLIENTS) {
+                    throw new ReachedLimitException(Integer.parseInt(welcomeMessage.getParameter(0)));
+                }
+
+                CompletableFuture<Message> responseFuture = expectMessage(Message.Type.ACK, Message.Type.NICKNAME_EXISTS, Message.Type.REJOIN);
+                sendMessage(new Message(Message.Type.NICKNAME_SET, model.applicationState.nicknameProperty().get()));
+
+                Message message = awaitMessage(responseFuture);
+                if (message.getType() == Message.Type.ACK) {
+                    stageManager.setSceneLater(StageManager.Scene.Lobby);
+                }
+                else if (message.getType() == Message.Type.NICKNAME_EXISTS) {
+                    throw new ExistsException();
+                }
+                else {
+                    model.applicationState.roomCodeProperty().set(message.getParameter(1));
+                    stageManager.setSceneLater(StageManager.Scene.Room);
+                }
+
+                model.applicationState.setControlsDisable(false);
+                model.clientState.isRespondingProperty().set(true);
+
+                keepAliveThread.start();
+            }
+            catch (IOException e) {
+                System.err.println("Socket Exception (reconnect)");
+            }
+            catch (TimeoutException e) {
+                System.err.println("Timeout (reconnect)");
+                keepAliveThread.interrupt();
+            }
+            catch (ReachedLimitException e) {
+                System.out.println("Nickname Exists (reconnect)");
+            }
+            catch (ExistsException e) {
+                System.out.println("Nickname Exists (reconnect)");
+            }
+            catch (RuntimeException e) {
+                handleRuntimeException();
+            }
+        }).start();
+    }
+
     public void sendMessage(Message message) throws IOException {
         System.out.println("Send To Server: " + message.Serialize());
         communicator.send(message);
@@ -347,9 +409,12 @@ public class Controller {
     }
 
     private void handleRuntimeException() {
+        messagesManagerThread.interrupt();
+        keepAliveThread.interrupt();
+        stateMachineThread.interrupt();
+        model.reset();
         stageManager.showAlertLater(Alert.AlertType.ERROR, "Runtime Exception", "Unexpected Error Occurred During Execution");
         stageManager.setSceneLater(StageManager.Scene.Index);
-        model.reset();
     }
 
 }

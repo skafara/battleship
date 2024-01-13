@@ -10,13 +10,15 @@ public class MessagesManager implements Runnable {
 
     private final Communicator communicator;
     private final StateMachine stateMachine;
+    private final Runnable onIOXeception;
 
     private CompletableFuture<Message> future;
     private Collection<Message.Type> awaitedMessageTypes;
 
-    public MessagesManager(Communicator communicator, StateMachine stateMachine) {
+    public MessagesManager(Communicator communicator, StateMachine stateMachine, Runnable onIOException) {
         this.communicator = communicator;
         this.stateMachine = stateMachine;
+        this.onIOXeception = onIOException;
     }
 
     @Override
@@ -35,7 +37,6 @@ public class MessagesManager implements Runnable {
                 }
             }
         } catch (IOException e) {
-            //
             System.err.println("Stop MessagesManager Thread: " + e.getMessage());
         }
     }

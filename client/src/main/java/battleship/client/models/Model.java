@@ -10,7 +10,6 @@ public class Model {
         clientState.nicknameProperty().bindBidirectional(applicationState.nicknameProperty());
     }
 
-
     public void reset() {
         applicationState.reset();
         clientState.reset();

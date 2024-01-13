@@ -46,6 +46,12 @@ public class ApplicationState {
         return roomCode;
     }
 
+    public void setControlsDisable(boolean isDisabled) {
+        indexDisable.set(isDisabled);
+        lobbyDisable.set(isDisabled);
+        roomDisable.set(isDisabled);
+    }
+
     public void reset() {
         indexDisable.set(false);
         lobbyDisable.set(false);
