@@ -128,7 +128,9 @@ public class Controller {
                 }
             }
             catch (IOException | TimeoutException e) {
-                reconnect();
+                if (reconnect() && e instanceof TimeoutException) {
+                    handleTimeout();
+                }
                 future.completeExceptionally(e);
             }
             catch (RuntimeException e) {
@@ -169,7 +171,9 @@ public class Controller {
                 }
             }
             catch (IOException | TimeoutException e) {
-                reconnect();
+                if (reconnect() && e instanceof TimeoutException) {
+                    handleTimeout();
+                }
                 future.completeExceptionally(e);
             }
             catch (RuntimeException e) {
@@ -195,7 +199,9 @@ public class Controller {
                 future.complete(null);
             }
             catch (IOException | TimeoutException e) {
-                reconnect();
+                if (reconnect() && e instanceof TimeoutException) {
+                    handleTimeout();
+                }
                 future.completeExceptionally(e);
             }
             catch (RuntimeException e) {
@@ -229,7 +235,9 @@ public class Controller {
                 }
             }
             catch (IOException | TimeoutException e) {
-                reconnect();
+                if (reconnect() && e instanceof TimeoutException) {
+                    handleTimeout();
+                }
                 future.completeExceptionally(e);
             }
             catch (RuntimeException e) {
@@ -272,7 +280,9 @@ public class Controller {
                 }
             }
             catch (IOException | TimeoutException e) {
-                reconnect();
+                if (reconnect() && e instanceof TimeoutException) {
+                    handleTimeout();
+                }
                 future.completeExceptionally(e);
             }
             catch (RuntimeException e) {
@@ -284,7 +294,7 @@ public class Controller {
         return future;
     }
 
-    private void reconnect() {
+    private boolean reconnect() {
         model.applicationState.setControlsDisable(true);
         model.clientState.isRespondingProperty().set(false);
 
@@ -350,7 +360,10 @@ public class Controller {
             model.reset();
             stageManager.setSceneLater(StageManager.Scene.Index);
             stageManager.showAlertLater(Alert.AlertType.ERROR, "Connection Error", "There are problems connecting to the server. Please try again.");
+            return false;
         }
+
+        return true;
     }
 
     public void sendMessage(Message message) throws IOException {
@@ -390,6 +403,10 @@ public class Controller {
             }
         }
         return new Message(Message.Type.BOARD_READY, positions.toArray());
+    }
+
+    private void handleTimeout() {
+        stageManager.showAlertLater(Alert.AlertType.ERROR, "Request Timed Out", "Please try again.");
     }
 
     private void handleRuntimeException() {
