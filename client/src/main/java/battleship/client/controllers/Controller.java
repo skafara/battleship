@@ -89,6 +89,7 @@ public class Controller {
                         stageManager.setSceneLater(StageManager.Scene.Room);
                     }
 
+                    model.opponentState.isRespondingProperty().set(true);
                     model.clientState.isRespondingProperty().set(true);
 
                     keepAliveThread.start();
@@ -121,6 +122,7 @@ public class Controller {
 
                 if (response.getType() == Message.Type.ROOM_CREATED) {
                     model.applicationState.roomCodeProperty().set(response.getParameter(0));
+                    model.opponentState.isRespondingProperty().set(true);
                     future.complete(null);
                 }
                 else {
@@ -336,8 +338,8 @@ public class Controller {
                 }
 
                 model.applicationState.setControlsDisable(false);
-                model.opponentState.isRespondingProperty().set(true);
                 model.clientState.isRespondingProperty().set(true);
+                model.opponentState.isRespondingProperty().set(true);
 
                 keepAliveThread.start();
                 stateMachineThread.start();
@@ -359,7 +361,7 @@ public class Controller {
         if (!isReconnected) {
             model.reset();
             stageManager.setSceneLater(StageManager.Scene.Index);
-            stageManager.showAlertLater(Alert.AlertType.ERROR, "Connection Error", "There are problems connecting to the server. Please try again.");
+            stageManager.showAlertLater(Alert.AlertType.ERROR, "Connection Error", "There have been problems connecting to the server. Please try again.");
             return false;
         }
 
