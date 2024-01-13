@@ -288,8 +288,6 @@ public class Controller {
         model.applicationState.setControlsDisable(true);
         model.clientState.isRespondingProperty().set(false);
 
-        socket = new Socket();
-        messagesManagerThread.interrupt();
         keepAliveThread.interrupt();
         stateMachineThread.interrupt();
 
@@ -297,6 +295,7 @@ public class Controller {
         long start = System.currentTimeMillis();
         for (long now = System.currentTimeMillis(); now < start + RECONNECT_TIMEOUT_MS; now = System.currentTimeMillis()) {
             try {
+                socket = new Socket();
                 socket.connect(new InetSocketAddress(model.applicationState.serverAddressProperty().get(), Integer.parseInt(model.applicationState.serverPortProperty().get())), SOCKET_CONNECTION_TIMEOUT_MS);
                 communicator = new Communicator(socket);
                 stateMachine = new StateMachine(new StateMachineController(model, stageManager));
