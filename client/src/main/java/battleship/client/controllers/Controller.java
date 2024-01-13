@@ -356,6 +356,7 @@ public class Controller {
                 isReconnected = true;
                 break;
             } catch (IOException | TimeoutException | ReachedLimitException | ExistsException e) {
+                messagesManagerThread.interrupt();
                 System.err.println("Reconnect Exception: Trying Again");
             } catch (RuntimeException e) {
                 handleRuntimeException();
