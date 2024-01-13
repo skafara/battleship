@@ -11,6 +11,8 @@ import java.util.concurrent.TimeoutException;
 
 public class MessagesManager implements Runnable {
 
+    private static final boolean IS_DEBUG = false;
+    private static final int MESSAGE_TIMEOUT_MS = IS_DEBUG ? 60_000 : 15_000;
     private final Object ACCESS_EXPECTED_MESSAGE = new Object();
 
     private final Communicator communicator;
@@ -40,7 +42,7 @@ public class MessagesManager implements Runnable {
                     }
                 }).start();
 
-                Message message = futureMessage.get(lastActive - System.currentTimeMillis() + 15_000, TimeUnit.MILLISECONDS);
+                Message message = futureMessage.get(lastActive - System.currentTimeMillis() + MESSAGE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
                 lastActive = System.currentTimeMillis();
 
                 if (Thread.interrupted()) {
