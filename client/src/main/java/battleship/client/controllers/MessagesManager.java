@@ -11,10 +11,11 @@ import java.util.concurrent.TimeoutException;
 
 public class MessagesManager implements Runnable {
 
+    private final Object ACCESS_EXPECTED_MESSAGE = new Object();
+
     private final Communicator communicator;
     private final StateMachine stateMachine;
     private final Runnable onConnectionError;
-    private long lastActive;
 
     private CompletableFuture<Message> future;
     private Collection<Message.Type> awaitedMessageTypes;
@@ -28,7 +29,7 @@ public class MessagesManager implements Runnable {
     @Override
     public void run() {
         try {
-            lastActive = System.currentTimeMillis();
+            long lastActive = System.currentTimeMillis();
             for (;;) {
                 CompletableFuture<Message> futureMessage = new CompletableFuture<>();
                 new Thread(() -> {
@@ -50,14 +51,15 @@ public class MessagesManager implements Runnable {
                     continue;
                 }
 
-                if (future != null) {
-                    if (awaitedMessageTypes.contains(message.getType())) {
+                synchronized (ACCESS_EXPECTED_MESSAGE) {
+                    if (future != null && awaitedMessageTypes.contains(message.getType())) {
                         future.complete(message);
                         future = null;
+                        continue;
                     }
-                } else {
-                    stateMachine.enqueueMessage(message);
                 }
+
+                stateMachine.enqueueMessage(message);
             }
         }
         catch (TimeoutException e) {
@@ -65,21 +67,25 @@ public class MessagesManager implements Runnable {
                 return;
             }
 
-            if (future != null) {
-                future.completeExceptionally(new TimeoutException());
+            synchronized (ACCESS_EXPECTED_MESSAGE) {
+                if (future != null) {
+                    future.completeExceptionally(new TimeoutException());
+                    return;
+                }
             }
-            else {
-                new Thread(onConnectionError).start();
-            }
+
+            new Thread(onConnectionError).start();
         }
         catch (ExecutionException e) {
             if (e.getCause() instanceof IOException) {
-                if (future != null) {
-                    future.completeExceptionally(e.getCause());
+                synchronized (ACCESS_EXPECTED_MESSAGE) {
+                    if (future != null) {
+                        future.completeExceptionally(e.getCause());
+                        return;
+                    }
                 }
-                else {
-                    new Thread(onConnectionError).start();
-                }
+
+                new Thread(onConnectionError).start();
             }
         }
         catch (InterruptedException e) {
