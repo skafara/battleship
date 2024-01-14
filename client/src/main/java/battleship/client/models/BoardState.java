@@ -69,7 +69,7 @@ public class BoardState {
         Field field = getField(row, col);
         return field == Field.HIT || field == Field.MISS;
     }
-    
+
     public boolean isInvalidated(int row, int col) {
         return getField(row, col) == Field.INVALIDATED;
     }

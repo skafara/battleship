@@ -1,10 +1,13 @@
 package battleship.client.controllers;
 
+import battleship.client.controllers.messages.Message;
 import battleship.client.models.BoardState;
 import battleship.client.models.ClientState;
 import battleship.client.models.Model;
 import battleship.client.views.StageManager;
 import javafx.scene.control.Alert;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class StateMachineController {
 

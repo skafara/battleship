@@ -1,4 +1,4 @@
-package battleship.client.controllers;
+package battleship.client.controllers.messages;
 
 import battleship.client.models.BoardState;
 
@@ -98,7 +98,7 @@ public class Message {
         return parameters.size();
     }
 
-    public String Serialize() {
+    public String serialize() {
         StringBuilder stringBuilder = new StringBuilder();
 
         stringBuilder.append(type.name());
@@ -116,7 +116,7 @@ public class Message {
         return stringBuilder.toString();
     }
 
-    public static Message Deserialize(String string) {
+    public static Message deserialize(String string) {
         String[] parts = string.split("\\" + PARAMETER_DELIMITER );
 
         Type type;
@@ -124,7 +124,7 @@ public class Message {
             type = Type.valueOf(parts[0]);
         }
         catch (IllegalArgumentException e) {
-            throw new RuntimeException(); // TODO illegal msg exc?
+            throw new RuntimeException();
         }
 
         if (!PARAMETERS_COUNTS.containsKey(type)) {
@@ -169,4 +169,8 @@ public class Message {
         return new Message(type, parameters.toArray());
     }
 
+    @Override
+    public String toString() {
+        return serialize();
+    }
 }

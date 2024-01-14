@@ -1,9 +1,14 @@
-package battleship.client.controllers;
+package battleship.client.controllers.messages;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.Socket;
 
 public class Communicator {
+
+    private final Logger logger = LogManager.getLogger();
 
     private static final char ESCAPE_CHARACTER = '\\';
     private static final char MESSAGE_DELIMITER = 0x0A;
@@ -19,6 +24,7 @@ public class Communicator {
     }
 
     public Message receive() throws IOException {
+        logger.trace("Receiving Message");
         StringBuilder stringBuilder = new StringBuilder();
 
         boolean escape = false;
@@ -43,11 +49,14 @@ public class Communicator {
             stringBuilder.append(c);
         }
 
-        return Message.Deserialize(stringBuilder.toString());
+        Message message = Message.deserialize(stringBuilder.toString());
+        logger.trace("Message Received: " + message.serialize());
+        return message;
     }
 
     public void send(Message message) throws IOException {
-        String text = message.Serialize();
+        logger.trace("Sending Message: " + message.serialize());
+        String text = message.serialize();
 
         synchronized (WRITE_ACCESS) {
             for (int i = 0; i < text.length(); i++) {
@@ -60,6 +69,7 @@ public class Communicator {
             bufferedWriter.write(MESSAGE_DELIMITER);
             bufferedWriter.flush();
         }
+        logger.trace("Message Sent");
     }
 
 }

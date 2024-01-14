@@ -1,8 +1,15 @@
-package battleship.client.controllers;
+package battleship.client.controllers.workers;
+
+import battleship.client.controllers.messages.Communicator;
+import battleship.client.controllers.messages.Message;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
 public class KeepAlive implements Runnable {
+
+    private final Logger logger = LogManager.getLogger();
 
     private static final int INTERVAL_MS = 5_000;
     private static final Message KEEP_ALIVE_MESSAGE = new Message(Message.Type.KEEP_ALIVE);
@@ -18,12 +25,16 @@ public class KeepAlive implements Runnable {
     public void run() {
         try {
             for (;;) {
+                logger.trace("Sending Keep Alive Message");
                 communicator.send(KEEP_ALIVE_MESSAGE);
                 Thread.sleep(INTERVAL_MS);
             }
         }
-        catch (IOException | InterruptedException e) {
-            System.err.println("Stop KeepAlive Thread: " + e.getMessage());
+        catch (IOException e) {
+            logger.error(e.getMessage());
+        }
+        catch (InterruptedException e) {
+            logger.trace("Interrupted");
         }
     }
 }

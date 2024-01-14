@@ -3,15 +3,23 @@ package battleship.client.controllers;
 import battleship.client.controllers.exceptions.ExistsException;
 import battleship.client.controllers.exceptions.NotExistsException;
 import battleship.client.controllers.exceptions.ReachedLimitException;
+import battleship.client.controllers.messages.Communicator;
+import battleship.client.controllers.messages.Message;
+import battleship.client.controllers.workers.KeepAlive;
+import battleship.client.controllers.workers.MessagesManager;
+import battleship.client.controllers.workers.StateMachine;
 import battleship.client.models.BoardState;
 import battleship.client.models.Model;
 import battleship.client.views.StageManager;
 import javafx.scene.control.Alert;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -19,6 +27,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class Controller {
+
+    private final Logger logger = LogManager.getLogger();
 
     private static final int RECEIVE_MSG_TIMEOUT_MS = 15_000;
     private static final int SOCKET_CONNECTION_TIMEOUT_MS = 10_000;
@@ -52,6 +62,8 @@ public class Controller {
     }
 
     public CompletableFuture<Void> connect(String address, String port, String nickname) {
+        logger.trace("Connecting");
+
         CompletableFuture<Void> future = new CompletableFuture<>();
         try {
             int port_ = Integer.parseInt(port);
@@ -68,23 +80,29 @@ public class Controller {
                     stateMachineThread = new Thread(stateMachine);
 
                     CompletableFuture<Message> welcomeFuture = expectMessage(Message.Type.WELCOME, Message.Type.LIMIT_CLIENTS);
+                    logger.debug("Start Messages Manager Thread");
                     messagesManagerThread.start();
                     Message welcomeMessage = awaitMessage(welcomeFuture);
                     if (welcomeMessage.getType() == Message.Type.LIMIT_CLIENTS) {
+                        logger.info("Reached Clients Count Limit");
                         future.completeExceptionally(new ReachedLimitException(Integer.parseInt(welcomeMessage.getParameter(0))));
                     }
+                    logger.info("Welcome");
 
                     CompletableFuture<Message> responseFuture = expectMessage(Message.Type.ACK, Message.Type.NICKNAME_EXISTS, Message.Type.REJOIN);
                     sendMessage(new Message(Message.Type.NICKNAME_SET, nickname));
 
                     Message message = awaitMessage(responseFuture);
                     if (message.getType() == Message.Type.ACK) {
+                        logger.info("Nickname Set");
                         stageManager.setSceneLater(StageManager.Scene.Lobby);
                     }
                     else if (message.getType() == Message.Type.NICKNAME_EXISTS) {
+                        logger.info("Nickname Exists");
                         future.completeExceptionally(new ExistsException());
                     }
                     else {
+                        logger.info("Rejoin: " + message.getParameter(1));
                         model.applicationState.roomCodeProperty().set(message.getParameter(1));
                         stageManager.setSceneLater(StageManager.Scene.Room);
                     }
@@ -92,11 +110,14 @@ public class Controller {
                     model.opponentState.isRespondingProperty().set(true);
                     model.clientState.isRespondingProperty().set(true);
 
+                    logger.trace("Start Keep Alive Thread");
                     keepAliveThread.start();
+                    logger.trace("Start State Machine Thread");
                     stateMachineThread.start();
                     future.complete(null);
                 }
                 catch (IOException | TimeoutException e) {
+                    logger.error(e.getMessage());
                     future.completeExceptionally(e);
                 }
                 catch (RuntimeException e) {
@@ -106,6 +127,7 @@ public class Controller {
             }).start();
         }
         catch (NumberFormatException e) {
+            logger.trace(e.getMessage());
             future.completeExceptionally(new IllegalArgumentException(e.getMessage()));
         }
 
@@ -113,6 +135,8 @@ public class Controller {
     }
 
     public CompletableFuture<Void> createRoom() {
+        logger.trace("Creating Room");
+
         CompletableFuture<Void> future = new CompletableFuture<>();
         new Thread(() -> {
             CompletableFuture<Message> responseFuture = expectMessage(Message.Type.ROOM_CREATED, Message.Type.LIMIT_ROOMS);
@@ -121,11 +145,13 @@ public class Controller {
                 Message response = awaitMessage(responseFuture);
 
                 if (response.getType() == Message.Type.ROOM_CREATED) {
+                    logger.info("Room Created: " + response.getParameter(0));
                     model.applicationState.roomCodeProperty().set(response.getParameter(0));
                     model.opponentState.isRespondingProperty().set(true);
                     future.complete(null);
                 }
                 else {
+                    logger.info("Reached Rooms Count Limit");
                     future.completeExceptionally(new ReachedLimitException(Integer.parseInt(response.getParameter(0))));
                 }
             }
@@ -145,14 +171,17 @@ public class Controller {
     }
 
     public CompletableFuture<Void> joinRoom(String code) {
+        logger.trace("Joining Room: " + code);
+
         CompletableFuture<Void> future = new CompletableFuture<>();
         try {
             Integer.parseInt(code);
             if (code.length() != ROOM_CODE_LENGTH) {
-                throw new IllegalArgumentException();
+                throw new IllegalArgumentException("Invalid Room Code Length");
             }
         }
         catch (IllegalArgumentException e) {
+            logger.info(e.getMessage());
             future.completeExceptionally(e);
             return future;
         }
@@ -165,10 +194,13 @@ public class Controller {
                 Message response = awaitMessage(responseFuture);
 
                 if (response.getType() == Message.Type.ACK) {
+                    logger.info("Joined Room");
                     future.complete(null);
                 } else if (response.getType() == Message.Type.ROOM_FULL) {
+                    logger.info("Room Full");
                     future.completeExceptionally(new ReachedLimitException(2));
                 } else {
+                    logger.info("Room Not Exists");
                     future.completeExceptionally(new NotExistsException());
                 }
             }
@@ -188,12 +220,15 @@ public class Controller {
     }
 
     public CompletableFuture<Void> leaveRoom() {
+        logger.trace("Leaving Room");
+
         CompletableFuture<Void> future = new CompletableFuture<>();
         new Thread(() -> {
             CompletableFuture<Message> responseFuture = expectMessage(Message.Type.ACK);
             try {
                 sendMessage(new Message(Message.Type.ROOM_LEAVE));
                 awaitMessage(responseFuture);
+                logger.info("Leaved Room");
 
                 model.applicationState.roomCodeProperty().set("");
                 model.clientState.resetExceptNickname();
@@ -216,8 +251,11 @@ public class Controller {
     }
 
     public CompletableFuture<Void> boardReady(BoardState boardState) {
+        logger.trace("Setting Board Ready");
+
         CompletableFuture<Void> future = new CompletableFuture<>();
         if (!boardState.isValid()) {
+            logger.info("Invalid Board");
             future.completeExceptionally(new IllegalArgumentException());
             return future;
         }
@@ -229,10 +267,12 @@ public class Controller {
                 Message response = awaitMessage(responseFuture);
 
                 if (response.getType() == Message.Type.ACK) {
+                    logger.info("Board Ready");
                     model.clientState.isBoardReadyProperty().set(true);
                     future.complete(null);
                 }
                 else {
+                    logger.info("Invalid Board");
                     future.completeExceptionally(new IllegalArgumentException());
                 }
             }
@@ -252,9 +292,12 @@ public class Controller {
     }
 
     public CompletableFuture<Void> turn(int row, int col) {
+        logger.info("Processing Turn");
+
         CompletableFuture<Void> future = new CompletableFuture<>();
         BoardState boardState = model.opponentState.getBoardState();
         if (boardState.isGuess(row, col) || boardState.isInvalidated(row, col)) {
+            logger.info("Invalid Turn");
             future.completeExceptionally(new IllegalArgumentException());
             return future;
         }
@@ -267,17 +310,21 @@ public class Controller {
 
                 if (response.getType() == Message.Type.TURN_RESULT) {
                     if (response.getParameter(1).equals("HIT")) {
+                        logger.info("Hit");
                         model.opponentState.getBoardState().setField(BoardState.Field.HIT, row, col);
                     }
                     else {
+                        logger.info("Miss");
                         model.opponentState.getBoardState().setField(BoardState.Field.MISS, row, col);
                     }
                     future.complete(null);
                 }
                 else if (response.getType() == Message.Type.TURN_ILLEGAL) {
+                    logger.info("Invalid Turn");
                     future.completeExceptionally(new IllegalArgumentException());
                 }
                 else {
+                    logger.info("Not Your Turn");
                     future.completeExceptionally(new IllegalStateException());
                 }
             }
@@ -297,16 +344,21 @@ public class Controller {
     }
 
     private boolean reconnect() {
+        logger.trace("Reconnecting");
+
         model.applicationState.setControlsDisable(true);
         model.clientState.isRespondingProperty().set(false);
 
+        logger.debug("Interrupt Keep Alive Thread");
         keepAliveThread.interrupt();
+        logger.debug("Interrupt State Machine Thread");
         stateMachineThread.interrupt();
 
         boolean isReconnected = false;
         long start = System.currentTimeMillis();
         for (long now = System.currentTimeMillis(); now < start + RECONNECT_TIMEOUT_MS; now = System.currentTimeMillis()) {
             try {
+                logger.debug("Attempting Reconnect");
                 socket = new Socket();
                 socket.connect(new InetSocketAddress(model.applicationState.serverAddressProperty().get(), Integer.parseInt(model.applicationState.serverPortProperty().get())), SOCKET_CONNECTION_TIMEOUT_MS);
                 communicator = new Communicator(socket);
@@ -318,6 +370,7 @@ public class Controller {
                 stateMachineThread = new Thread(stateMachine);
 
                 CompletableFuture<Message> welcomeFuture = expectMessage(Message.Type.WELCOME, Message.Type.LIMIT_CLIENTS);
+                logger.debug("Start Messages Manager Thread");
                 messagesManagerThread.start();
                 Message welcomeMessage = awaitMessage(welcomeFuture);
                 if (welcomeMessage.getType() == Message.Type.LIMIT_CLIENTS) {
@@ -346,6 +399,8 @@ public class Controller {
                 isReconnected = true;
                 break;
             } catch (IOException | TimeoutException | ReachedLimitException | ExistsException e) {
+                logger.debug("Attempt Failed: " + e.getMessage());
+                logger.debug("Interrupting Messages Manager Thread");
                 messagesManagerThread.interrupt();
                 try {
                     Thread.sleep(RECONNECT_ATTEMPT_SLEEP_MS);
@@ -359,6 +414,8 @@ public class Controller {
         }
 
         if (!isReconnected) {
+            logger.error("Could Not Reconnect");
+            logger.trace("Reset Model");
             model.reset();
             stageManager.setSceneLater(StageManager.Scene.Index);
             stageManager.showAlertLater(Alert.AlertType.ERROR, "Connection Error", "There have been problems connecting to the server. Please try again.");
@@ -369,20 +426,23 @@ public class Controller {
     }
 
     public void sendMessage(Message message) throws IOException {
-        System.out.println("Send To Server: " + message.Serialize());
+        logger.trace("Send Message: " + message.serialize());
         communicator.send(message);
     }
 
     public CompletableFuture<Message> expectMessage(Message.Type... type) {
+        logger.trace("Expect Message: " + Arrays.toString(type));
         return messagesManager.expectMessage(type);
     }
 
     private Message awaitMessage(CompletableFuture<Message> future) throws TimeoutException, IOException {
+        logger.trace("Awaiting Message");
         try {
             Message message = future.get(RECEIVE_MSG_TIMEOUT_MS, TimeUnit.MILLISECONDS); // throws TimeoutException
-            System.out.println("Recv From Server: " + message.Serialize());
+            logger.trace("Got Message");
             return message;
         } catch (ExecutionException | InterruptedException e) {
+            logger.error("Error Awaiting Message: " + e.getCause().getMessage());
             Throwable cause = e.getCause();
             if (cause instanceof IOException) {
                 throw (IOException) cause;
@@ -408,10 +468,15 @@ public class Controller {
     }
 
     private void handleTimeout() {
+        logger.error("Request Timed Out");
         stageManager.showAlertLater(Alert.AlertType.ERROR, "Request Timed Out", "Please try again.");
     }
 
     private void handleRuntimeException() {
+        logger.error("Runtime Exception");
+        logger.debug("Interrupting Workers");
+        logger.debug("Resetting Model");
+
         messagesManagerThread.interrupt();
         keepAliveThread.interrupt();
         stateMachineThread.interrupt();
