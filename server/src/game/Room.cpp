@@ -1,5 +1,6 @@
 #include "Room.hpp"
 #include "../util/Generator.hpp"
+#include "../util/Logger.hpp"
 
 #include <algorithm>
 
@@ -7,7 +8,7 @@
 namespace game {
 
 	Room::Room(const std::string &code) : _code(code) {
-		//
+		util::Logger::Trace("Room.Room " + code);
 	}
 
 	std::string Room::Generate_Code() {
@@ -31,6 +32,7 @@ namespace game {
 	}
 
 	void Room::Join(const std::shared_ptr<Client> client) {
+		util::Logger::Trace("Room.Join " + client->Get_Nickname());
 		for (std::shared_ptr<Client> &_client : _clients) {
 			if (_client == nullptr) {
 				_client = client;
@@ -50,6 +52,7 @@ namespace game {
 	}
 
 	void Room::Set_Board_Ready(const Client &client) {
+		util::Logger::Trace("Room.Set_Board_Ready " + client.Get_Nickname());
 		_boards_ready[Get_Client_Idx(client)] = true;
 	}
 
@@ -62,6 +65,7 @@ namespace game {
 	}
 
 	void Room::Set_Opponent_On_Turn(const Client &client) {
+		util::Logger::Trace("Room.Set_Opponent_On_Turn " + client.Get_Nickname());
 		_client_on_turn_idx = Get_Client_Idx(Get_Opponent(client));
 	}
 
@@ -84,10 +88,12 @@ namespace game {
 	}
 
 	void Room::Set_Board(const Client &client, const Board &board) {
+		util::Logger::Trace("Room.Set_Board " + client.Get_Nickname());
 		_boards[Get_Client_Idx(client)] = board;
 	}
 
 	void Room::Reset_Boards() {
+		util::Logger::Trace("Room.Reset_Boards");
 		for (size_t i = 0; i < _clients.size(); ++i) {
 			_boards[i] = Board{};
 			_boards_ready[i] = false;

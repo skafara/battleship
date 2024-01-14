@@ -20,5 +20,6 @@ add_executable(bserver main.cpp
         game/Board.cpp
 
         util/Generator.cpp
+        util/Logger.cpp
 )
 target_link_libraries(bserver pthread)

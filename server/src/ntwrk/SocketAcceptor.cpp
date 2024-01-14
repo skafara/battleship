@@ -1,4 +1,5 @@
 #include "SocketAcceptor.hpp"
+#include "../util/Logger.hpp"
 
 #include <unistd.h>
 #include <sys/socket.h>
@@ -9,10 +10,12 @@
 namespace ntwrk {
 
 	void SocketAcceptor::Initialize() {
+		util::Logger::Trace("SocketAcceptor.Initialize");
 		signal(SIGPIPE, SIG_IGN);
 	}
 
 	SocketAcceptor::SocketAcceptor(const std::string &addr, uint16_t port, int backlog) {
+		util::Logger::Trace("SocketAcceptor.SocketAcceptor");
 		_socket = socket(AF_INET, SOCK_STREAM, 0);
 		if (_socket == -1) {
 			throw SocketException{"Cannot Bind Socket Acceptor"};

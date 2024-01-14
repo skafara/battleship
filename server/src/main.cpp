@@ -2,6 +2,7 @@
 
 #include "CliArgsParser.hpp"
 #include "Server.hpp"
+#include "util/Logger.hpp"
 
 
 void Print_Info() {
@@ -36,9 +37,11 @@ int main(int argc, char **argv) {
 		Server server{args.ip, args.port, args.lim_clients, args.lim_rooms};
 		server.Serve();
 	} catch (const std::invalid_argument &e) {
+		util::Logger::Error(e.what());
 		std::cerr << "[ERROR] " << e.what() << std::endl;
 		Print_Help();
 	} catch (const std::exception &e) {
+		util::Logger::Error(e.what());
 		std::cerr << "[ERROR] " << e.what() << std::endl;
 	}
 

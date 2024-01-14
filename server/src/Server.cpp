@@ -4,24 +4,30 @@
 #include "msgs/Messages.hpp"
 #include "game/StateMachine.hpp"
 #include "game/Room.hpp"
+#include "util/Logger.hpp"
 
 #include <thread>
 #include <algorithm>
+#include <iostream>
 
 
 Server::Server(const std::string &addr, uint16_t port, size_t lim_clients, size_t lim_rooms) :
 		_lim_clients(lim_clients), _lim_rooms(lim_rooms), _sock_acceptor(addr, port) {
-	//
+	util::Logger::Trace("Server.Server");
 }
 
-#include "iostream"
 void Server::Serve() {
+	util::Logger::Trace("Server.Serve");
+
+	util::Logger::Trace("Start Clients Terminator Thread");
 	std::thread th_clients_terminator{&Server::Clients_Terminator, this};
+	util::Logger::Trace("Start Clients Alive Keeper Thread");
 	std::thread th_clients_alive_keeper{&Server::Clients_Alive_Keeper, this};
 
 	for (;;) {
 		try {
 			std::unique_ptr<ntwrk::Socket> sock = Accept_Connection();
+			util::Logger::Info("Connection Accepted");
 
 			std::lock_guard lck{Get_Mutex()};
 			if (_clients.size() >= _lim_clients) {
@@ -32,25 +38,30 @@ void Server::Serve() {
 			std::shared_ptr<game::Client> client = std::make_shared<game::Client>(std::move(sock));
 			_clients.push_back(client);
 
+			util::Logger::Trace("Start Serve Client Thread");
 			std::thread thread{&Server::Serve_Client, this, client};
 			thread.detach();
 		}
 		catch (const ntwrk::SocketException &e) {
+			util::Logger::Error(e.what());
 			std::cerr << e.what() << std::endl;
 		}
 	}
 }
 
 std::unique_ptr<ntwrk::Socket> Server::Accept_Connection() const {
+	util::Logger::Trace("Server.Accept_Connection");
 	return std::make_unique<ntwrk::Socket>(_sock_acceptor.Accept());
 }
 
 void Server::Refuse_Connection(std::unique_ptr<ntwrk::Socket> sock) const {
+	util::Logger::Info("Server.Refuse_Connection");
 	msgs::Communicator::Send(*sock, msgs::Messages::Limit_Clients(_lim_clients));
 	msgs::Communicator::Send(*sock, msgs::Messages::Conn_Term());
 }
 
 void Server::Serve_Client(std::shared_ptr<game::Client> client) {
+	util::Logger::Info("Server.Serve_Client");
 	client->Set_State(game::State::kInit);
 	client->Send_Msg(msgs::Messages::Welcome());
 	client->Set_Last_Active(std::chrono::steady_clock::now());
@@ -66,6 +77,7 @@ bool Server::Is_Exceeded_Lim_Rooms() const {
 }
 
 const std::string &Server::Create_Room() {
+	util::Logger::Trace("Server.Create_Room");
 	for (;;) {
 		const std::string code = game::Room::Generate_Code();
 		if (Exists_Room(code)) {
@@ -88,7 +100,7 @@ std::shared_ptr<game::Room> Server::Get_Room(const std::string &code) const {
 }
 
 std::shared_ptr<game::Room> Server::Get_Room(const std::shared_ptr<game::Client> client) const {
-	for (const std::shared_ptr<game::Room> room : _rooms) {
+	for (const std::shared_ptr<game::Room> &room : _rooms) {
 		const auto &f = room->Get_Clients();
 		if (std::ranges::find(f, client) != std::end(f)) {
 			return room;
@@ -99,10 +111,12 @@ std::shared_ptr<game::Room> Server::Get_Room(const std::shared_ptr<game::Client>
 }
 
 void Server::Destroy_Room(const std::shared_ptr<game::Room> room) {
+	util::Logger::Trace("Server.Destroy_Room " + room->Get_Code());
 	_rooms.erase(std::ranges::find(_rooms, room));
 }
 
 void Server::Erase_Disconnected_Client(const std::string &nickname) {
+	util::Logger::Trace("Server.Erase_Disconnected_Client " + nickname);
 	_disconnected.erase(std::ranges::find(_disconnected, nickname, &game::Client::Get_Nickname));
 }
 
@@ -117,6 +131,7 @@ bool Server::Is_Nickname_Disconnected(const std::string &nickname) const {
 }
 
 void Server::Disconnect_Client(const std::shared_ptr<game::Client> client) {
+	util::Logger::Trace("Server.Disconnect_Client " + client->Get_Nickname());
 	const game::State &state = client->Get_State();
 	if (state == game::State::kInit || state == game::State::kIn_Lobby) {
 		client->Send_Msg(msgs::Messages::Conn_Term());
@@ -138,6 +153,7 @@ void Server::Disconnect_Client(const std::shared_ptr<game::Client> client) {
 }
 
 void Server::Reconnect_Client(std::shared_ptr<game::Client> &client) {
+	util::Logger::Trace("Server.Reconnect_Client " + client->Get_Nickname());
 	const auto it = std::ranges::find(_disconnected, client->Get_Nickname(), &game::Client::Get_Nickname);
 	const std::shared_ptr<game::Client> disconnected = *it;
 	_disconnected.erase(it);
@@ -213,6 +229,7 @@ void Server::Clients_Terminator() {
 		std::unique_lock lck{Get_Mutex()};
 		if (_disconnected.empty()) {
 			lck.unlock();
+			util::Logger::Trace("Server.Clients_Terminator Not Any Disconnected Client");
 			std::this_thread::sleep_for(Timeout_Long);
 			continue;
 		}
@@ -254,6 +271,7 @@ void Server::Clients_Alive_Keeper() const {
 		std::unique_lock lck{Get_Mutex()};
 		if (_clients.empty()) {
 			lck.unlock();
+			util::Logger::Trace("Server.Clients_Alive_Keeper Not Any Connected Client");
 			std::this_thread::sleep_for(Interval_Keep_Alive);
 			continue;
 		}

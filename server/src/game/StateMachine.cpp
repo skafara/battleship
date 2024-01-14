@@ -4,6 +4,7 @@
 
 #include "thread"
 #include "iostream"
+#include "../util/Logger.hpp"
 #include <future>
 namespace game {
 
@@ -44,9 +45,11 @@ namespace game {
 	}
 
 	void StateMachine::Run() {
+		util::Logger::Info("StateMachine.Run");
 		for (;;) {
 			try {
 				const msgs::Message msg = Await_Msg();
+				util::Logger::Info("Received Msg: " + msg.Serialize());
 
 				std::lock_guard lck{_server.Get_Mutex()};
 
@@ -61,21 +64,21 @@ namespace game {
 				}
 			}
 			catch (const ntwrk::SocketException &e) {
-				std::cerr << e.what() << std::endl;
+				util::Logger::Error(e.what());
 				std::lock_guard lck{_server.Get_Mutex()};
 
 				_server.Disconnect_Client(_client);
 				return;
 			}
 			catch (const msgs::IllegalMessageException &e) {
-				std::cerr << e.what() << std::endl;
+				util::Logger::Error(e.what());
 				std::lock_guard lck{_server.Get_Mutex()};
 
 				_server.Disconnect_Client(_client);
 				return;
 			}
 			catch (const TimeoutException &e) {
-				std::cerr << e.what() << std::endl;
+				util::Logger::Error(e.what());
 				std::lock_guard lck{_server.Get_Mutex()};
 
 				_server.Disconnect_Client(_client);
@@ -85,6 +88,7 @@ namespace game {
 	}
 
 	msgs::Message StateMachine::Await_Msg() const {
+		util::Logger::Info("Await Msg");
 		for (;;) {
 			std::promise<msgs::Message> promise;
 			std::future<msgs::Message> future = promise.get_future();
@@ -118,6 +122,7 @@ namespace game {
 			_client->Set_Last_Active(std::chrono::steady_clock::now());
 			const msgs::Message msg = future.get();
 			if (msg.Get_Type() == msgs::MessageType::kKeep_Alive) {
+				util::Logger::Info("Received Msg: " + msg.Serialize());
 				continue;
 			}
 
@@ -129,11 +134,13 @@ namespace game {
 		const std::string &nickname = msg.Get_Param(0);
 
 		if (_server.Is_Nickname_Active(nickname)) {
+			util::Logger::Trace("Nickname Active");
 			_client->Send_Msg(msgs::Messages::Nickname_Exists());
 			return false;
 		}
 
 		if (_server.Is_Nickname_Disconnected(nickname)) {
+			util::Logger::Trace("Nickname Disconnected");
 			_client->Set_Nickname(nickname);
 			_server.Reconnect_Client(_client);
 			return false;
@@ -146,6 +153,7 @@ namespace game {
 
 	bool StateMachine::Handle_Room_Create(const msgs::Message &msg) {
 		if (_server.Is_Exceeded_Lim_Rooms()) {
+			util::Logger::Trace("Room Limit Exceeded");
 			_client->Send_Msg(msgs::Messages::Limit_Rooms(_server.Get_Lim_Rooms()));
 			return false;
 		}
@@ -162,12 +170,14 @@ namespace game {
 		const std::string &code = msg.Get_Param(0);
 
 		if (!_server.Exists_Room(code)) {
+			util::Logger::Trace("Room Not Exists");
 			_client->Send_Msg(msgs::Messages::Room_Not_Exists());
 			return false;
 		}
 
 		const std::shared_ptr<Room> room = _server.Get_Room(code);
 		if (room->Is_Full()) {
+			util::Logger::Trace("Room Full");
 			_client->Send_Msg(msgs::Messages::Room_Full());
 			return false;
 		}
@@ -231,6 +241,7 @@ namespace game {
 			_client->Send_Ack();
 		}
 		catch (const std::invalid_argument &) {
+			util::Logger::Trace("Board Illegal");
 			_client->Send_Msg(msgs::Messages::Board_Illegal());
 			return false;
 		}
@@ -243,6 +254,7 @@ namespace game {
 		opponent.Send_Msg(msgs::Messages::Opponent_Board_Ready());
 
 		if (room->Is_Board_Ready(opponent)) {
+			util::Logger::Info("Game Begin " + room->Get_Code());
 			_client->Send_Msg(msgs::Messages::Game_Begin());
 			opponent.Send_Msg(msgs::Messages::Game_Begin());
 
@@ -264,6 +276,7 @@ namespace game {
 	bool StateMachine::Handle_Turn(const msgs::Message &msg) {
 		const std::shared_ptr<Room> room = _server.Get_Room(_client);
 		if (!room->Is_On_Turn(*_client)) {
+			util::Logger::Trace("Not Your Turn");
 			_client->Send_Msg(msgs::Messages::Turn_Not_You());
 			return false;
 		}
@@ -282,6 +295,7 @@ namespace game {
 			}
 
 			if (board.Turn(field_pos.first, field_pos.second)) {
+				util::Logger::Info("Hit");
 				_client->Send_Msg(msgs::Messages::Turn_Result(field_pos.first, field_pos.second, msgs::Messages::Turn_Res::kHit));
 				opponent.Send_Msg(msgs::Messages::Opponent_Turn(field_pos.first, field_pos.second, msgs::Messages::Turn_Res::kHit));
 
@@ -291,6 +305,8 @@ namespace game {
 				}
 
 				if (board.Is_All_Ships_Guessed()) {
+					util::Logger::Info("Game End " + room->Get_Code() + _client->Get_Nickname());
+
 					_client->Send_Msg(msgs::Messages::Game_End(msgs::Messages::Client::kYou));
 					opponent.Send_Msg(msgs::Messages::Game_End(msgs::Messages::Client::kOpponent));
 
@@ -301,6 +317,7 @@ namespace game {
 				}
 			}
 			else {
+				util::Logger::Info("Miss");
 				_client->Send_Msg(msgs::Messages::Turn_Result(field_pos.first, field_pos.second, msgs::Messages::Turn_Res::kMiss));
 				opponent.Send_Msg(msgs::Messages::Opponent_Turn(field_pos.first, field_pos.second, msgs::Messages::Turn_Res::kMiss));
 
@@ -310,7 +327,8 @@ namespace game {
 				return false;
 			}
 		}
-		catch (const std::invalid_argument &) {
+		catch (const std::invalid_argument &e) {
+			util::Logger::Trace(e.what());
 			_client->Send_Msg(msgs::Messages::Turn_Illegal());
 			return false;
 		}
