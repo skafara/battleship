@@ -10,6 +10,7 @@
 
 namespace game {
 
+	/// Client's State Machine State
 	enum class State {
 		kInit,
 		kIn_Lobby,
@@ -22,11 +23,17 @@ namespace game {
 
 	class Client : public I_ClientOps {
 	public:
+		/// Transparently constructs
+		/// \param sock Socket
 		explicit Client(std::unique_ptr<ntwrk::Socket> sock);
 
 		Client(const Client &other) = delete;
 		Client &operator=(const Client &other) = delete;
 
+		/// Returns whether the clients are equal (have same nicknames)
+		/// \param lhs lhs
+		/// \param rhs rhs
+		/// \return Bool
 		friend bool operator==(const Client &lhs, const Client &rhs);
 
 		State Get_State() const override;

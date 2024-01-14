@@ -6,10 +6,10 @@
 
 namespace util {
 
-	const std::map<Logger::Log_Type, const std::string> Logger::kLog_Type_String{
-			{Log_Type::TRACE, "TRACE"},
-			{Log_Type::INFO, "INFO"},
-			{Log_Type::ERROR, "ERROR"}
+	const std::map<Logger::Msg_Type, const std::string> Logger::kLog_Type_String{
+			{Msg_Type::TRACE, "TRACE"},
+			{Msg_Type::INFO,  "INFO"},
+			{Msg_Type::ERROR, "ERROR"}
 	};
 
 	std::unique_ptr<Logger> Logger::kInstance = nullptr;
@@ -20,7 +20,7 @@ namespace util {
 		//
 	}
 
-	void Logger::Log(Logger::Log_Type type, const std::string &text) {
+	void Logger::Log(Logger::Msg_Type type, const std::string &msg) {
 		const auto time = std::time(nullptr);
 		const auto *time_info = std::localtime(&time);
 
@@ -28,19 +28,19 @@ namespace util {
 		_ofstream << std::put_time(time_info, "%Y-%m-%d %H:%M:%S") << " | ";
 		_ofstream << "Thread " << std::this_thread::get_id() << " | ";
 		_ofstream << kLog_Type_String.at(type) << " | ";
-		_ofstream << text << std::endl;
+		_ofstream << msg << std::endl;
 	}
 
-	void Logger::Trace(const std::string &text) {
-		Get_Instance().Log(Log_Type::TRACE, text);
+	void Logger::Trace(const std::string &msg) {
+		Get_Instance().Log(Msg_Type::TRACE, msg);
 	}
 
-	void Logger::Info(const std::string &text) {
-		Get_Instance().Log(Log_Type::INFO, text);
+	void Logger::Info(const std::string &msg) {
+		Get_Instance().Log(Msg_Type::INFO, msg);
 	}
 
-	void Logger::Error(const std::string &text) {
-		Get_Instance().Log(Log_Type::ERROR, text);
+	void Logger::Error(const std::string &msg) {
+		Get_Instance().Log(Msg_Type::ERROR, msg);
 	}
 
 	Logger &Logger::Get_Instance() {

@@ -5,20 +5,28 @@
 #include <regex>
 
 
+/// CLI Arguments Parser
 class CliArgsParser {
 public:
+	/// Parse Result
 	class Result {
 	public:
-		const std::string ip;
-		const uint16_t port;
-		const size_t lim_clients;
-		const size_t lim_rooms;
+		const std::string ip; /// IP Address
+		const uint16_t port; /// Port
+		const size_t lim_clients; /// Clients Count Limit
+		const size_t lim_rooms; /// Rooms Count Limit
 
+		/// Transparently constructs
 		Result(const std::string &ip, uint16_t port, size_t lim_clients, size_t lim_rooms);
 	};
 
+	/// Ignore getopt error outputs
 	static void Ignore_Opt_Errs();
 
+	/// Returns whether args contain option for help
+	/// \param argc argc
+	/// \param argv argv
+	/// \return Bool
 	static bool Is_Help(int argc, char **argv);
 	static Result Parse(int argc, char **argv);
 

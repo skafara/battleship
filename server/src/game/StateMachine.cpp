@@ -135,7 +135,7 @@ namespace game {
 	bool StateMachine::Handle_Nickname_Set(const msgs::Message &msg) {
 		const std::string &nickname = msg.Get_Param(0);
 
-		if (_server.Is_Nickname_Active(nickname)) {
+		if (_server.Is_Nickname_Connected(nickname)) {
 			util::Logger::Trace("Nickname Active");
 			_client->Send_Msg(msgs::Messages::Nickname_Exists());
 			return false;
@@ -154,7 +154,7 @@ namespace game {
 	}
 
 	bool StateMachine::Handle_Room_Create(const msgs::Message &msg) {
-		if (_server.Is_Exceeded_Lim_Rooms()) {
+		if (_server.Is_Reached_Lim_Rooms()) {
 			util::Logger::Trace("Room Limit Exceeded");
 			_client->Send_Msg(msgs::Messages::Limit_Rooms(_server.Get_Lim_Rooms()));
 			return false;

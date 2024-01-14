@@ -11,16 +11,21 @@
 
 namespace msgs {
 
+	/// Illegal Message Exception
 	class IllegalMessageException : public std::runtime_error {
 	public:
+		/// Transparently constructs
 		explicit IllegalMessageException(const std::string &text) : std::runtime_error(text) {
 			//
 		}
 	};
 
+	/// Integral Value Concept
+	/// \tparam T Type
 	template <typename T>
 	concept IntegralValue = std::is_integral_v<std::remove_reference_t<T>>;
 
+	/// Message Type
 	enum class MessageType {
 		kWelcome,
 		kKeep_Alive,
@@ -57,6 +62,7 @@ namespace msgs {
 		kInvalidate_Field
 	};
 
+	/// Map Message Type -> String representation
 	static const std::map<MessageType, const std::string> kMessageType_String {
 		{MessageType::kWelcome, "WELCOME"},
 		{MessageType::kKeep_Alive, "KEEP_ALIVE"},
@@ -93,6 +99,7 @@ namespace msgs {
 		{MessageType::kInvalidate_Field, "INVALIDATE_FIELD"}
 	};
 
+	/// Map Incoming Message Type -> Expected Parameters Count
 	static const std::map<MessageType, const size_t> kMessageType_Params_Cnt{
 		{MessageType::kKeep_Alive, 0},
 		{MessageType::kAck, 0},
@@ -104,23 +111,42 @@ namespace msgs {
 		{MessageType::kTurn, 1}
 	};
 
+	/// Message
 	class Message {
 	public:
+		/// Constructs a message with given parameters
+		/// \tparam Args Type (string, IntegralValue)
+		/// \param type Message Type
+		/// \param args Parameters
 		template<typename... Args>
 		Message(const MessageType type, Args &&... args) {
 			_type = type;
 			Store_Params(std::forward<Args>(args)...);
 		};
 
+		/// Returns message type
+		/// \return Message Type
 		MessageType Get_Type() const;
+		/// Returns idx'th parameter
+		/// \param idx Index
+		/// \return Idx'th parameter
 		const std::string &Get_Param(size_t idx) const;
 
+		/// Stores a message parameter
+		/// \param param Parameter
 		void Store_Param(const std::string &param) {
 			_params.push_back(param);
 		};
 
+		/// Serializes the message
+		/// Escapes parameters delimiters (and escape characters)
+		/// \return Serialized message
 		std::string Serialize() const;
-		static Message Deserialize(const std::string &pair);
+		/// Deserializes a message
+		/// \param str String
+		/// \throws IllegalMessageException if it is unexpected/unknown incoming message (type, parameters count)
+		/// \return Message
+		static Message Deserialize(const std::string &str);
 
 	private:
 		static constexpr char kEscape_Char = '\\';

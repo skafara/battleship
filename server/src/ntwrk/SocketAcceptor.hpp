@@ -8,12 +8,19 @@
 
 namespace ntwrk {
 
+	/// Socket Connection Acceptor
 	class SocketAcceptor {
 	public:
+		/// Default Backlog
 		static constexpr int kDef_Backlog = 5;
 
+		/// Initialization Process
 		static void Initialize();
 
+		/// Initializes the acceptor with given parameters
+		/// \param addr Address to bind to and listen on for incoming connections
+		/// \param port Port to bind to and listen on for incoming connections
+		/// \param backlog Incoming connections backlog
 		SocketAcceptor(const std::string &addr, uint16_t port, int backlog = kDef_Backlog);
 
 		SocketAcceptor(const SocketAcceptor &other) = delete;
@@ -21,6 +28,8 @@ namespace ntwrk {
 
 		~SocketAcceptor();
 
+		/// Returns accepted socket connection
+		/// \return Socket
 		Socket Accept() const;
 
 	private:

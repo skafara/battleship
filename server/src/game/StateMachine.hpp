@@ -12,18 +12,25 @@ class I_ServerOps;
 
 namespace game {
 
+	/// Timeout Exception
 	class TimeoutException : public std::runtime_error {
 	public:
+		/// Transparently constructs
 		explicit TimeoutException(const std::string &text) : std::runtime_error(text) {
 			//
 		}
 	};
 
 	class StateMachine;
+	/// Message Handler Type
 	using t_Handler = std::function<bool (StateMachine &, const msgs::Message &)>;
 
+	/// State Machine
 	class StateMachine {
 	public:
+		/// Constructs and runs a state machine with provided client
+		/// \param server Server
+		/// \param client Client
 		static void Run(I_ServerOps &server, std::shared_ptr<Client> client);
 
 	private:
@@ -40,6 +47,9 @@ namespace game {
 		StateMachine(I_ServerOps &server, std::shared_ptr<Client> client);
 		void Run();
 
+		/// Awaits Message (skips Keep Alive messages)
+		/// \throws TimeoutException on message receive timeout
+		/// \return Message
 		msgs::Message Await_Msg() const;
 
 		bool Handle_Nickname_Set(const msgs::Message &msg);

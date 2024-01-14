@@ -72,7 +72,7 @@ size_t Server::Get_Lim_Rooms() const {
 	return _lim_rooms;
 }
 
-bool Server::Is_Exceeded_Lim_Rooms() const {
+bool Server::Is_Reached_Lim_Rooms() const {
 	return _rooms.size() >= _lim_rooms;
 }
 
@@ -101,8 +101,8 @@ std::shared_ptr<game::Room> Server::Get_Room(const std::string &code) const {
 
 std::shared_ptr<game::Room> Server::Get_Room(const std::shared_ptr<game::Client> client) const {
 	for (const std::shared_ptr<game::Room> &room : _rooms) {
-		const auto &f = room->Get_Clients();
-		if (std::ranges::find(f, client) != std::end(f)) {
+		const auto &clients = room->Get_Clients();
+		if (std::ranges::find(clients, client) != std::end(clients)) {
 			return room;
 		}
 	}
@@ -120,7 +120,7 @@ void Server::Erase_Disconnected_Client(const std::string &nickname) {
 	_disconnected.erase(std::ranges::find(_disconnected, nickname, &game::Client::Get_Nickname));
 }
 
-bool Server::Is_Nickname_Active(const std::string &nickname) const {
+bool Server::Is_Nickname_Connected(const std::string &nickname) const {
 	const auto it = std::ranges::find(_clients, nickname, &game::Client::Get_Nickname);
 	return it != std::end(_clients);
 }
