@@ -7,6 +7,22 @@
 
 namespace game {
 
+	std::string Get_Logger_State_Description(State state) {
+		std::string description = "INIT";
+		if (state == State::kIn_Lobby) description = "IN_LOBBY";
+		else if (state == State::kIn_Room) description = "IN_ROOM";
+		else if (state == State::kIn_Game) description = "IN_GAME";
+		return description;
+	}
+
+	std::string Get_Logger_Time_Point_Description(const std::chrono::time_point<std::chrono::steady_clock> &time_point) {
+		const auto time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now() + duration_cast<std::chrono::system_clock::duration>(time_point - std::chrono::steady_clock::now()));
+		const auto *timeinfo = localtime(&time);
+		std::ostringstream osstream;
+		osstream << std::put_time(timeinfo, "%Y-%m-%d %H:%M:%S");
+		return osstream.str();
+	}
+
 	Client::Client(std::unique_ptr<ntwrk::Socket> sock) : _sock(std::move(sock)) {
 		util::Logger::Trace("Client.Client");
 	}
@@ -20,12 +36,7 @@ namespace game {
 	}
 
 	void Client::Set_State(State state) {
-		std::string state_description = "INIT";
-		if (state == State::kIn_Lobby) state_description = "IN_LOBBY";
-		else if (state == State::kIn_Room) state_description = "IN_ROOM";
-		else if (state == State::kIn_Game) state_description = "IN_GAME";
-		util::Logger::Info("Client.Set_State " + state_description);
-
+		util::Logger::Info("Client.Set_State " + Get_Logger_State_Description(state));
 		_state = state;
 	}
 
@@ -34,12 +45,7 @@ namespace game {
 	}
 
 	void Client::Set_Last_Active(const std::chrono::time_point<std::chrono::steady_clock> &time_point) {
-		const auto time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now() + duration_cast<std::chrono::system_clock::duration>(time_point - std::chrono::steady_clock::now()));
-		const auto *timeinfo = localtime(&time);
-		std::ostringstream osstream;
-		osstream << std::put_time(timeinfo, "%Y-%m-%d %H:%M:%S");
-		util::Logger::Info("Client.Set_Last_Active " + osstream.str());
-
+		util::Logger::Info("Client.Set_Last_Active " + Get_Logger_Time_Point_Description(time_point));
 		_last_active = time_point;
 	}
 

@@ -227,9 +227,10 @@ std::mutex &Server::Get_Mutex() const {
 void Server::Clients_Terminator() {
 	for (;;) {
 		std::unique_lock lck{Get_Mutex()};
+		util::Logger::Trace("Server.Clients_Terminator");
 		if (_disconnected.empty()) {
 			lck.unlock();
-			util::Logger::Trace("Server.Clients_Terminator Not Any Disconnected Client");
+			util::Logger::Trace("No Disconnected Clients");
 			std::this_thread::sleep_for(Timeout_Long);
 			continue;
 		}
@@ -240,6 +241,7 @@ void Server::Clients_Terminator() {
 			const std::shared_ptr<game::Client> client = *it;
 			const auto duration = std::chrono::duration_cast<std::chrono::seconds>(now - client->Get_Last_Active());
 			if (duration >= Timeout_Long) {
+				util::Logger::Trace("Terminating Client: " + client->Get_Nickname());
 				std::shared_ptr<game::Room> room = Get_Room(client);
 				if (room) {
 					if (room->Is_Full()) {
@@ -269,9 +271,10 @@ void Server::Clients_Terminator() {
 void Server::Clients_Alive_Keeper() const {
 	for (;;) {
 		std::unique_lock lck{Get_Mutex()};
+		util::Logger::Trace("Server.Clients_Alive_Keeper");
 		if (_clients.empty()) {
 			lck.unlock();
-			util::Logger::Trace("Server.Clients_Alive_Keeper Not Any Connected Client");
+			util::Logger::Trace("No Connected Clients");
 			std::this_thread::sleep_for(Interval_Keep_Alive);
 			continue;
 		}

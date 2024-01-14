@@ -2,12 +2,14 @@
 
 #include "Communicator.hpp"
 #include "Message.hpp"
+#include "../util/Logger.hpp"
 
 
 namespace msgs {
 
 	void Communicator::Send(const ntwrk::Socket &sock, const Message &msg) {
 		const std::string text = msg.Serialize();
+		util::Logger::Trace("Communicator.Send " + text);
 
 		for (char c : text) {
 			if (c == kEscape_Char || c == kMsg_Delimiter) {
@@ -19,6 +21,7 @@ namespace msgs {
 	}
 
 	Message Communicator::Recv(const ntwrk::Socket &sock) {
+		util::Logger::Trace("Communicator.Recv");
 		std::ostringstream osstream{};
 
 		bool escape = false;
@@ -40,7 +43,9 @@ namespace msgs {
 			osstream << c;
 		}
 
-		return Message::Deserialize(osstream.str());
+		Message message = Message::Deserialize(osstream.str());
+		util::Logger::Trace("Received Msg: " + message.Serialize());
+		return message;
 	}
 
 } // msgs

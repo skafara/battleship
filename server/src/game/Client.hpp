@@ -17,6 +17,9 @@ namespace game {
 		kIn_Game
 	};
 
+	std::string Get_Logger_State_Description(State state);
+	std::string Get_Logger_Time_Point_Description(const std::chrono::time_point<std::chrono::steady_clock> &time_point);
+
 	class Client : public I_ClientOps {
 	public:
 		explicit Client(std::unique_ptr<ntwrk::Socket> sock);

@@ -59,6 +59,7 @@ namespace game {
 
 				const std::pair<State, msgs::MessageType> pair{_client->Get_State(), msg.Get_Type()};
 				const t_Handler handler = kHandlers.at(pair);
+				util::Logger::Trace("Handle Msg: " + msg.Serialize());
 				if (handler(*this, msg)) {
 					_client->Set_State(kSuccess_Transitions.at({_client->Get_State(), msg.Get_Type()}));
 				}
@@ -118,6 +119,7 @@ namespace game {
 				throw TimeoutException("Receive Message Timed Out");
 			}
 
+			util::Logger::Info("Received Msg In Time");
 			thread.join();
 			_client->Set_Last_Active(std::chrono::steady_clock::now());
 			const msgs::Message msg = future.get();
