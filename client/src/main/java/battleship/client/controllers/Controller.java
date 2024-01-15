@@ -152,7 +152,7 @@ public class Controller {
             }).start();
         }
         catch (NumberFormatException e) {
-            logger.trace(e.getMessage());
+            logger.trace("Invalid Number Format: " + e.getMessage());
             future.completeExceptionally(new IllegalArgumentException(e.getMessage()));
         }
 
