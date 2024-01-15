@@ -16,10 +16,18 @@ import java.net.UnknownHostException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * Connect to the server form
+ */
 public class FormConnect extends VBox {
 
     private static final int MAX_WIDTH = 160;
 
+    /**
+     * Constructs a connect to the server form
+     * @param applicationState Application state
+     * @param controller Controller
+     */
     public FormConnect(ApplicationState applicationState, Controller controller) {
         construct(applicationState, controller);
     }
@@ -29,13 +37,13 @@ public class FormConnect extends VBox {
         setMaxWidth(MAX_WIDTH);
         setAlignment(Pos.CENTER);
 
-        FormInputField fieldAddress = FormFactory.getBidirectionalyBoundFormInputField("Server Address", applicationState.serverAddressProperty());
+        FormInputField fieldAddress = FormFactory.getBidirectionallyBoundFormInputField("Server Address", applicationState.serverAddressProperty());
         fieldAddress.disableProperty().bind(applicationState.indexDisableProperty());
 
-        FormInputField fieldPort = FormFactory.getBidirectionalyBoundFormInputField("Server Port", applicationState.serverPortProperty());
+        FormInputField fieldPort = FormFactory.getBidirectionallyBoundFormInputField("Server Port", applicationState.serverPortProperty());
         fieldPort.disableProperty().bind(applicationState.indexDisableProperty());
 
-        FormInputField fieldNickname = FormFactory.getBidirectionalyBoundFormInputField("Nickname", applicationState.nicknameProperty());
+        FormInputField fieldNickname = FormFactory.getBidirectionallyBoundFormInputField("Nickname", applicationState.nicknameProperty());
         fieldNickname.disableProperty().bind(applicationState.indexDisableProperty());
 
         getChildren().addAll(

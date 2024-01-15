@@ -6,8 +6,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Message
+ */
 public class Message {
 
+    /**
+     * Message Type
+     */
     public enum Type {
         WELCOME,
         CONN_TERM,
@@ -43,6 +49,9 @@ public class Message {
         INVALIDATE_FIELD
     }
 
+    /**
+     * Incoming Messages Parameters Count
+     */
     private static final Map<Type, Integer> PARAMETERS_COUNTS = Map.ofEntries(
             Map.entry(Type.WELCOME, 4),
             Map.entry(Type.KEEP_ALIVE, 0),
@@ -78,6 +87,11 @@ public class Message {
     private final Type type;
     private final List<String> parameters;
 
+    /**
+     * Constructs a message with given type and parameters
+     * @param type Message Type
+     * @param parameters Paramateres
+     */
     public Message(Type type, Object... parameters) {
         this.type = type;
         this.parameters = new ArrayList<>();
@@ -86,18 +100,36 @@ public class Message {
         }
     }
 
+    /**
+     * Returns the message type
+     * @return Message type
+     */
     public Type getType() {
         return type;
     }
 
-    public String getParameter(int idx) {
-        return parameters.get(idx);
+    /**
+     * Returns index'th parameter
+     * @param index Index
+     * @return Index'th parameter
+     */
+    public String getParameter(int index) {
+        return parameters.get(index);
     }
 
+    /**
+     * Returns parameters count
+     * @return Parameters count
+     */
     public int getParametersCnt() {
         return parameters.size();
     }
 
+    /**
+     * Serializes the message
+     * Escapes parameters delimiters (and escape characters)
+     * @return String
+     */
     public String serialize() {
         StringBuilder stringBuilder = new StringBuilder();
 
@@ -116,6 +148,11 @@ public class Message {
         return stringBuilder.toString();
     }
 
+    /**
+     * Deserializes the message
+     * @param string String
+     * @return Message
+     */
     public static Message deserialize(String string) {
         String[] parts = string.split("\\" + PARAMETER_DELIMITER );
 
@@ -169,6 +206,10 @@ public class Message {
         return new Message(type, parameters.toArray());
     }
 
+    /**
+     * Returns string representation of the message
+     * @return String
+     */
     @Override
     public String toString() {
         return serialize();

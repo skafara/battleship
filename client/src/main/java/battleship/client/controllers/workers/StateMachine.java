@@ -9,6 +9,9 @@ import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.function.Consumer;
 
+/**
+ * State Machine
+ */
 public class StateMachine implements Runnable {
 
     private final Logger logger = LogManager.getLogger();
@@ -16,10 +19,17 @@ public class StateMachine implements Runnable {
     private final StateMachineController stateMachineController;
     private final BlockingDeque<Message> messages = new LinkedBlockingDeque<>();
 
+    /**
+     * Constructs a state machine
+     * @param stateMachineController State machine controller
+     */
     public StateMachine(StateMachineController stateMachineController) {
         this.stateMachineController = stateMachineController;
     }
 
+    /**
+     * State Machine Message Handle Loop
+     */
     @Override
     public void run() {
         try {
@@ -47,7 +57,7 @@ public class StateMachine implements Runnable {
                     case BOARD_STATE -> handler = stateMachineController::handleBoardState;
                     case INVALIDATE_FIELD -> handler = stateMachineController::handleInvalidateField;
                     default -> {
-                        logger.trace("No Suitable Handler");
+                        logger.error("No Suitable Handler: " + message.serialize());
                         continue;
                     }
                 }
@@ -60,6 +70,10 @@ public class StateMachine implements Runnable {
         }
     }
 
+    /**
+     * Enqueues a message for state machine to handle
+     * @param message Message
+     */
     public void enqueueMessage(Message message) {
         logger.trace("Enqueue Message: " + message.serialize());
         messages.add(message);

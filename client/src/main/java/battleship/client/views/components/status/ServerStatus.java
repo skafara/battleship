@@ -6,8 +6,16 @@ import javafx.beans.property.StringProperty;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.text.Text;
 
+/**
+ * Server Status
+ */
 public class ServerStatus extends FlowPane {
 
+    /**
+     * Constructs a Server Status
+     * @param address Server address
+     * @param isResponding Server is responding / Client is connected
+     */
     public ServerStatus(StringProperty address, BooleanProperty isResponding) {
         construct(address, isResponding);
     }

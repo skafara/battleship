@@ -6,6 +6,9 @@ import org.apache.logging.log4j.Logger;
 import java.io.*;
 import java.net.Socket;
 
+/**
+ * Messages Communicator
+ */
 public class Communicator {
 
     private final Logger logger = LogManager.getLogger();
@@ -18,11 +21,21 @@ public class Communicator {
     private final BufferedReader bufferedReader;
     private final BufferedWriter bufferedWriter;
 
+    /**
+     * Creates a messages communicator on the socket
+     * @param socket Socket
+     * @throws IOException on IO error
+     */
     public Communicator(Socket socket) throws IOException {
         bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         bufferedWriter = new BufferedWriter(new PrintWriter(socket.getOutputStream()));
     }
 
+    /**
+     * Receives a message (blocks)
+     * @return Message
+     * @throws IOException on IO error
+     */
     public Message receive() throws IOException {
         logger.trace("Receiving Message");
         StringBuilder stringBuilder = new StringBuilder();
@@ -54,6 +67,12 @@ public class Communicator {
         return message;
     }
 
+    /**
+     * Sends a message (does not block)
+     * Escapes message delimiters (and escape characters)
+     * @param message Message
+     * @throws IOException on IO error
+     */
     public void send(Message message) throws IOException {
         logger.trace("Sending Message: " + message.serialize());
         String text = message.serialize();

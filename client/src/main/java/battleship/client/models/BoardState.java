@@ -7,8 +7,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Board state
+ */
 public class BoardState {
 
+    /** Field */
     public enum Field {
         NONE,
         SHIP,
@@ -17,6 +21,7 @@ public class BoardState {
         INVALIDATED
     }
 
+    /** Board Size */
     public static final int SIZE = 10;
 
     private static final boolean IS_DEBUG = false;
@@ -31,10 +36,17 @@ public class BoardState {
 
     private final ObservableList<Field> board = FXCollections.observableArrayList(Collections.nCopies(SIZE * SIZE, Field.NONE));
 
+    /**
+     * Constructs a Board State
+     */
     public BoardState() {
         //
     }
 
+    /**
+     * Returns whether a board is valid (valid ships placement)
+     * @return Boolean
+     */
     public boolean isValid() {
         Map<Integer, Integer> shipsSizesCnts = new HashMap<>(SHIPS_SIZES_CNTS);
         boolean[] isVisited = new boolean[SIZE * SIZE];
@@ -57,45 +69,93 @@ public class BoardState {
         return shipsSizesCnts.values().stream().allMatch(i -> i == 0);
     }
 
+    /**
+     * Returns field on (row, col)
+     * @param row Row
+     * @param col Col
+     * @return Field
+     */
     public Field getField(int row, int col) {
         return board.get(getFieldIndex(row, col));
     }
 
+    /**
+     * Returns whether there is a ship on (row, col)
+     * @param row Row
+     * @param col Col
+     * @return Boolean
+     */
     public boolean isShip(int row, int col) {
         return getField(row, col) == Field.SHIP;
     }
 
+    /**
+     * Returns whether (row, col) has been previously guessed
+     * @param row Row
+     * @param col Col
+     * @return Boolean
+     */
     public boolean isGuess(int row, int col) {
         Field field = getField(row, col);
         return field == Field.HIT || field == Field.MISS;
     }
 
+    /**
+     * Returns whether (row, col) has been previously invalidated (not-guessed neighbour fields left after a ship is sunk)
+     * @param row Row
+     * @param col Col
+     * @return Boolean
+     */
     public boolean isInvalidated(int row, int col) {
         return getField(row, col) == Field.INVALIDATED;
     }
 
+    /**
+     * Sets field on (row, col)
+     * @param field Field
+     * @param row Row
+     * @param col Col
+     */
     public void setField(Field field, int row, int col) {
         board.set(getFieldIndex(row, col), field);
     }
 
+    /**
+     * Sets fieldIndex'th field
+     * @param field Field
+     * @param fieldIndex Index
+     */
     public void setField(Field field, int fieldIndex) {
         board.set(fieldIndex, field);
     }
 
+    /**
+     * Returns observable list of fields
+     * @return Observable list of fields
+     */
     public ObservableList<Field> getBoard() {
         return board;
     }
 
+    /**
+     * Resets board state
+     */
     public void reset() {
         Collections.fill(board, Field.NONE);
     }
 
-    private static int getFieldIndex(int row, int col) {
-        return SIZE * row + col;
-    }
-
+    /**
+     * Serializes a field position
+     * @param row Row
+     * @param col Col
+     * @return String
+     */
     public static String SerializeField(int row, int col) {
         return String.format("%d%d", row, col);
+    }
+
+    private static int getFieldIndex(int row, int col) {
+        return SIZE * row + col;
     }
 
     private boolean processShip(int row, int col, boolean[] visited, Map<Integer, Integer> shipsSizesCnts) {

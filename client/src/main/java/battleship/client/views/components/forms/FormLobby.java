@@ -4,26 +4,28 @@ import battleship.client.controllers.Controller;
 import battleship.client.controllers.exceptions.NotExistsException;
 import battleship.client.controllers.exceptions.ReachedLimitException;
 import battleship.client.models.ApplicationState;
-import battleship.client.models.Model;
 import battleship.client.views.StageManager;
-import javafx.application.Platform;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Pos;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
-import java.io.IOException;
-import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Lobby form
+ */
 public class FormLobby extends HBox {
 
     private static final int SPACING = 80;
     private static final int ITEM_MAX_WIDTH = 160;
 
+    /**
+     * Constructs a lobby form
+     * @param applicationState Application state
+     * @param controller Controller
+     */
     public FormLobby(ApplicationState applicationState, Controller controller) {
         construct(applicationState, controller);
     }
@@ -43,7 +45,7 @@ public class FormLobby extends HBox {
         vBox.setSpacing(FormFactory.SPACING);
         vBox.setAlignment(Pos.CENTER);
 
-        FormInputField inputField = FormFactory.getBidirectionalyBoundFormInputField("Room Code", applicationState.roomCodeProperty());
+        FormInputField inputField = FormFactory.getBidirectionallyBoundFormInputField("Room Code", applicationState.roomCodeProperty());
         inputField.getTextField().disableProperty().bind(applicationState.lobbyDisableProperty());
 
         Button button = FormFactory.getButton("Join Room", (e) -> handleButtonJoinRoom(applicationState, controller));

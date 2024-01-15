@@ -13,6 +13,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * Messages Manager
+ * Receives messages, handles expected messages requests or passes the messages to the state machine
+ */
 public class MessagesManager implements Runnable {
 
     private final Logger logger = LogManager.getLogger();
@@ -28,12 +32,22 @@ public class MessagesManager implements Runnable {
     private CompletableFuture<Message> future;
     private Collection<Message.Type> awaitedMessageTypes;
 
+    /**
+     * Constructs a messages manager
+     * @param communicator Messages Communicator
+     * @param stateMachine State Machine
+     * @param onConnectionError On Connection Error Handler
+     */
     public MessagesManager(Communicator communicator, StateMachine stateMachine, Runnable onConnectionError) {
         this.communicator = communicator;
         this.stateMachine = stateMachine;
         this.onConnectionError = onConnectionError;
     }
 
+    /**
+     * Messages Manager Loop
+     * In case of error, runs the handler in new thread
+     */
     @Override
     public void run() {
         try {
@@ -109,6 +123,11 @@ public class MessagesManager implements Runnable {
         }
     }
 
+    /**
+     * Sets a request to expect a message
+     * @param type Expected Message Type
+     * @return Future
+     */
     public CompletableFuture<Message> expectMessage(Message.Type... type) {
         logger.trace("Expect Message: " + Arrays.toString(type));
         future = new CompletableFuture<>();

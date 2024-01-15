@@ -22,6 +22,9 @@ import javafx.scene.text.Text;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Board
+ */
 public class Board extends GridPane {
 
     private static final int BOARD_SIZE = 10;
@@ -30,6 +33,13 @@ public class Board extends GridPane {
     private static final Color GRAY = Color.rgb(160, 160, 160);
     private static final Color YELLOW = Color.rgb(237, 234, 182);
 
+    /**
+     * Constructs a Board
+     * @param model Model
+     * @param controller Controller
+     * @param isClient True if client's board, false if opponent's board
+     * @param isInGame Game has begun and not ended yet
+     */
     public Board(Model model, Controller controller, boolean isClient, BooleanBinding isInGame) {
         ClientState clientState = isClient ? model.clientState : model.opponentState;
 

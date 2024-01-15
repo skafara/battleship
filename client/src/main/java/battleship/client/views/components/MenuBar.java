@@ -7,8 +7,14 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCombination;
 
+/**
+ * Application Menu Bar
+ */
 public class MenuBar extends javafx.scene.control.MenuBar {
 
+    /**
+     * Constructs an Application Menu Bar
+     */
     public MenuBar() {
         construct();
     }

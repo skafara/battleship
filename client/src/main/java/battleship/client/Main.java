@@ -5,10 +5,17 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.stage.Stage;
 
+/**
+ * Application
+ */
 public class Main extends Application {
 
     private StageManager stageManager;
 
+    /**
+     * Initialize Application
+     * @throws Exception Never
+     */
     @Override
     public void init() throws Exception {
         super.init();
@@ -16,6 +23,10 @@ public class Main extends Application {
         stageManager = new StageManager();
     }
 
+    /**
+     * Start Application
+     * @param stage Stage
+     */
     @Override
     public void start(Stage stage) {
         stage.setOnCloseRequest((e) -> {
@@ -28,6 +39,10 @@ public class Main extends Application {
         stageManager.showStage();
     }
 
+    /**
+     * Launch Application
+     * @param args CLI args
+     */
     public static void main(String[] args) {
         launch();
     }

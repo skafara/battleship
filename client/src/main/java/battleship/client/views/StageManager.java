@@ -10,8 +10,14 @@ import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 
+/**
+ * Stage Manager
+ */
 public class StageManager {
 
+    /**
+     * Scene
+     */
     public enum Scene {
         Index,
         Lobby,
@@ -27,10 +33,17 @@ public class StageManager {
     private final Model model = new Model();
     private final Controller controller = new Controller(model);
 
+    /**
+     * Constructs a Stage Manager
+     */
     public StageManager() {
         controller.setStageManager(this);
     }
 
+    /**
+     * Sets a stage to manage
+     * @param stage Stage
+     */
     public void setStage(Stage stage) {
         this.stage = stage;
 
@@ -39,6 +52,10 @@ public class StageManager {
         this.stage.setMinHeight(MIN_HEIGHT);
     }
 
+    /**
+     * Sets a new scene
+     * @param scene Scene
+     */
     public void setScene(Scene scene) {
         Parent parent = null;
         switch (scene) {
@@ -50,10 +67,20 @@ public class StageManager {
         stage.setScene(new javafx.scene.Scene(parent, MIN_WIDTH, MIN_HEIGHT));
     }
 
+    /**
+     * Sets a JavaFX request to set scene
+     * @param scene Scene
+     */
     public void setSceneLater(Scene scene) {
         Platform.runLater(() -> setScene(scene));
     }
 
+    /**
+     * Shows an alert
+     * @param type Alert Type
+     * @param header Header message
+     * @param content Content message
+     */
     public void showAlert(Alert.AlertType type, String header, String content) {
         String typeText = "";
         if (type == Alert.AlertType.ERROR) {
@@ -69,10 +96,19 @@ public class StageManager {
         alert.showAndWait();
     }
 
+    /**
+     * Sets a JavaFX request to show an alert
+     * @param type Alert Type
+     * @param header Header message
+     * @param content Content message
+     */
     public void showAlertLater(Alert.AlertType type, String header, String content) {
         Platform.runLater(() -> showAlert(type, header, content));
     }
 
+    /**
+     * Shows the stage
+     */
     public void showStage() {
         stage.show();
     }

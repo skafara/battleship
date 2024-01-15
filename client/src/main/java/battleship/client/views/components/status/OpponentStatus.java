@@ -6,8 +6,16 @@ import javafx.beans.property.BooleanProperty;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.text.Text;
 
+/**
+ * Opponent Status
+ */
 public class OpponentStatus extends FlowPane {
 
+    /**
+     * Constructs an Opponent Status
+     * @param isInRoom Opponent is in room
+     * @param isResponding Opponent is responding
+     */
     public OpponentStatus(BooleanBinding isInRoom, BooleanProperty isResponding) {
         construct(isInRoom, isResponding);
     }

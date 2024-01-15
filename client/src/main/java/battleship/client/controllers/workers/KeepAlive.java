@@ -7,6 +7,9 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 
+/**
+ * Alive Keeper
+ */
 public class KeepAlive implements Runnable {
 
     private final Logger logger = LogManager.getLogger();
@@ -16,11 +19,17 @@ public class KeepAlive implements Runnable {
 
     private final Communicator communicator;
 
+    /**
+     * Constructs an Alive Keeper
+     * @param communicator Messages Communicator
+     */
     public KeepAlive(Communicator communicator) {
         this.communicator = communicator;
     }
 
-
+    /**
+     * Alive Keeper Loop
+     */
     @Override
     public void run() {
         try {

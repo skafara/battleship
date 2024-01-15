@@ -19,12 +19,22 @@ import javafx.scene.text.Text;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * Room Scene Factory
+ */
 public class RoomFactory {
 
     private static final int SPACING = 8;
     private static final int CONTROL_PANEL_PADDING_TOP = 32;
     private static final int BOARDS_SPACING = 80;
 
+    /**
+     * Constructs a control panel based on model and client's state
+     * Includes just the necessary buttons
+     * @param model Model
+     * @param controller Controller
+     * @return Control Panel
+     */
     public static VBox getControlPanel(Model model, Controller controller) {
         VBox vBox = new VBox();
         vBox.setAlignment(Pos.CENTER);
@@ -54,6 +64,12 @@ public class RoomFactory {
         return vBox;
     }
 
+    /**
+     * Constructs boards
+     * @param model Model
+     * @param controller Controller
+     * @return Boards
+     */
     public static HBox getBoards(Model model, Controller controller) {
         HBox hBox = new HBox();
         hBox.setSpacing(BOARDS_SPACING);

@@ -15,7 +15,7 @@ import javafx.scene.control.Alert;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -26,6 +26,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * Application Controller
+ */
 public class Controller {
 
     private final Logger logger = LogManager.getLogger();
@@ -49,18 +52,40 @@ public class Controller {
 
     private StageManager stageManager;
 
+    /**
+     * Constructs an application controller
+     * @param model Application model
+     */
     public Controller(Model model) {
         this.model = model;
     }
 
+    /**
+     * Sets a stage manager to use
+     * @param stageManager Stage Manager
+     */
     public void setStageManager(StageManager stageManager) {
         this.stageManager = stageManager;
     }
 
+    /**
+     * Returns stage manager
+     * @return Stage Manager
+     */
     public StageManager getStageManager() {
         return stageManager;
     }
 
+    /**
+     * Connects to the server
+     * Launches Messages Manager, Keep Alive, State Machine threads
+     * Exceptions are forwarded through returned future
+     * - IllegalArgument, Exists, ReachedLimit, Timeout, IO, Socket, Runtime
+     * @param address Server address
+     * @param port Server port
+     * @param nickname Nickname
+     * @return Future
+     */
     public CompletableFuture<Void> connect(String address, String port, String nickname) {
         logger.trace("Connecting");
 
@@ -134,6 +159,12 @@ public class Controller {
         return future;
     }
 
+    /**
+     * Creates a room
+     * Exceptions are forwarded through returned future
+     * - ReachedLimit, IO, Timeout, Runtime
+     * @return Future
+     */
     public CompletableFuture<Void> createRoom() {
         logger.trace("Creating Room");
 
@@ -170,6 +201,13 @@ public class Controller {
         return future;
     }
 
+    /**
+     * Joins a room
+     * Exceptions are forwarded through returned future
+     * - IllegalArgument, ReachedLimit, NotExists, IO, Timeout, Runtime
+     * @param code Room code
+     * @return Future
+     */
     public CompletableFuture<Void> joinRoom(String code) {
         logger.trace("Joining Room: " + code);
 
@@ -219,6 +257,12 @@ public class Controller {
         return future;
     }
 
+    /**
+     * Leaves a room
+     * Exceptions are forwarded through returned future
+     * - IO, Timeout, Runtime
+     * @return Future
+     */
     public CompletableFuture<Void> leaveRoom() {
         logger.trace("Leaving Room");
 
@@ -250,6 +294,13 @@ public class Controller {
         return future;
     }
 
+    /**
+     * Sets board ready
+     * Exceptions are forwarded through returned future
+     * - IllegalArgument, IO, Timeout, Runtime
+     * @param boardState Board State
+     * @return Future
+     */
     public CompletableFuture<Void> boardReady(BoardState boardState) {
         logger.trace("Setting Board Ready");
 
@@ -291,6 +342,14 @@ public class Controller {
         return future;
     }
 
+    /**
+     * Performs a turn
+     * Exceptions are forwarded through returned future
+     * - IllegalArgument, IllegalState, IO, Timeout, Runtime
+     * @param row Row
+     * @param col Col
+     * @return Future
+     */
     public CompletableFuture<Void> turn(int row, int col) {
         logger.info("Processing Turn");
 
@@ -343,6 +402,59 @@ public class Controller {
         return future;
     }
 
+    /**
+     * Sends a message
+     * @param message Message
+     * @throws IOException on IO error
+     */
+    public void sendMessage(Message message) throws IOException {
+        logger.trace("Send Message: " + message.serialize());
+        communicator.send(message);
+    }
+
+    /**
+     * Sets a request for Messages Manager to expect a message
+     * @param type Expected Message Type
+     * @return Future
+     */
+    public CompletableFuture<Message> expectMessage(Message.Type... type) {
+        logger.trace("Expect Message: " + Arrays.toString(type));
+        return messagesManager.expectMessage(type);
+    }
+
+    /**
+     * Awaits an expected message
+     * @param future Expected Message future
+     * @return Message
+     * @throws TimeoutException on timeout
+     * @throws IOException on IO error
+     */
+    private Message awaitMessage(CompletableFuture<Message> future) throws TimeoutException, IOException {
+        logger.trace("Awaiting Message");
+        try {
+            Message message = future.get(RECEIVE_MSG_TIMEOUT_MS, TimeUnit.MILLISECONDS); // throws TimeoutException
+            logger.trace("Got Message");
+            return message;
+        } catch (ExecutionException | InterruptedException e) {
+            logger.error("Error Awaiting Message: " + e.getCause().getMessage());
+            Throwable cause = e.getCause();
+            if (cause instanceof IOException) {
+                throw (IOException) cause;
+            }
+            else if (cause instanceof TimeoutException) {
+                throw (TimeoutException) cause;
+            }
+
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Performs a reconnect
+     * Handles changes to model
+     * Handles running threads interrupting and launching new ones
+     * @return True if reconnect successful else false
+     */
     private boolean reconnect() {
         logger.trace("Reconnecting");
 
@@ -423,36 +535,6 @@ public class Controller {
         }
 
         return true;
-    }
-
-    public void sendMessage(Message message) throws IOException {
-        logger.trace("Send Message: " + message.serialize());
-        communicator.send(message);
-    }
-
-    public CompletableFuture<Message> expectMessage(Message.Type... type) {
-        logger.trace("Expect Message: " + Arrays.toString(type));
-        return messagesManager.expectMessage(type);
-    }
-
-    private Message awaitMessage(CompletableFuture<Message> future) throws TimeoutException, IOException {
-        logger.trace("Awaiting Message");
-        try {
-            Message message = future.get(RECEIVE_MSG_TIMEOUT_MS, TimeUnit.MILLISECONDS); // throws TimeoutException
-            logger.trace("Got Message");
-            return message;
-        } catch (ExecutionException | InterruptedException e) {
-            logger.error("Error Awaiting Message: " + e.getCause().getMessage());
-            Throwable cause = e.getCause();
-            if (cause instanceof IOException) {
-                throw (IOException) cause;
-            }
-            else if (cause instanceof TimeoutException) {
-                throw (TimeoutException) cause;
-            }
-
-            throw new RuntimeException(e);
-        }
     }
 
     private static Message getBoardReadyMessage(BoardState boardState) {

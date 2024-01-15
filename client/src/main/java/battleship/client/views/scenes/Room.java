@@ -5,11 +5,18 @@ import battleship.client.models.Model;
 import battleship.client.views.components.MenuBar;
 import battleship.client.views.components.RoomFactory;
 import battleship.client.views.components.status.StatusFactory;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.layout.BorderPane;
 
+/**
+ * Room Scene
+ */
 public class Room extends BorderPane {
 
+    /**
+     * Constructs a Room Scene
+     * @param model Model
+     * @param controller Controller
+     */
     public Room(Model model, Controller controller) {
         construct(model, controller);
     }
