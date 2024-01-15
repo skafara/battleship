@@ -33,7 +33,6 @@ namespace msgs {
 
 	Message Message::Deserialize(const std::string &str) {
 		std::istringstream isstream{str};
-		std::cout << "Deserialize: " << str << std::endl;
 
 		std::string type_str;
 		std::getline(isstream, type_str, kParam_Delimiter);
