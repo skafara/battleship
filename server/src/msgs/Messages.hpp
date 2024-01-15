@@ -6,8 +6,10 @@
 
 namespace msgs {
 
+	/// Messages Construction Util
 	class Messages {
 	public:
+		/// Client
 		enum class Client {
 			kYou,
 			kOpponent
@@ -21,6 +23,7 @@ namespace msgs {
 			}
 		}
 
+		/// Turn Result
 		enum class Turn_Res {
 			kHit,
 			kMiss
@@ -34,6 +37,7 @@ namespace msgs {
 			}
 		}
 
+		/// Duration
 		enum class Duration {
 			kShort,
 			kLong
@@ -47,6 +51,7 @@ namespace msgs {
 			}
 		}
 
+		/// State
 		enum class State {
 			kIn_Room,
 			kIn_Game
@@ -60,6 +65,7 @@ namespace msgs {
 			}
 		}
 
+		/// Field
 		enum class Field {
 			kNone,
 			kShip,
