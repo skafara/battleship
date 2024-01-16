@@ -13,7 +13,7 @@ Client: Java, JavaFX (Linux, Windows)
 
 ### Server
 
-`/server$ cmake && cd build && make`
+`/server$ cmake -Bbuild -Ssrc && cd build && make`
 
 ## Usage
 
