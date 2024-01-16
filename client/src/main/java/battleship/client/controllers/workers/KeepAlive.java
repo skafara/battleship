@@ -14,7 +14,7 @@ public class KeepAlive implements Runnable {
 
     private final Logger logger = LogManager.getLogger();
 
-    private static final boolean IS_DEBUG = true;
+    private static final boolean IS_DEBUG = false;
     private static final int INTERVAL_MS = IS_DEBUG ? 30_000 : 5_000;
     private static final Message KEEP_ALIVE_MESSAGE = new Message(Message.Type.KEEP_ALIVE);
 

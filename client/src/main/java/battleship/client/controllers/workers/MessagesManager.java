@@ -21,7 +21,7 @@ public class MessagesManager implements Runnable {
 
     private final Logger logger = LogManager.getLogger();
 
-    private static final boolean IS_DEBUG = true;
+    private static final boolean IS_DEBUG = false;
     private static final int ANY_MESSAGE_TIMEOUT_MS = IS_DEBUG ? 150_000 : 15_000;
     private final Object ACCESS_EXPECTED_MESSAGE = new Object();
 
