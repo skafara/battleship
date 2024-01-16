@@ -38,8 +38,8 @@ namespace game {
 		static const std::map<std::pair<State, msgs::MessageType>, State> kSuccess_Transitions;
 		static const std::map<std::pair<State, msgs::MessageType>, t_Handler> kHandlers;
 
-		static constexpr bool kIs_Timeout_Debug = false;
-		static constexpr std::chrono::seconds Timeout_Short{kIs_Timeout_Debug ? 120 : 15};
+		static constexpr bool kIs_Timeout_Debug = true;
+		static constexpr std::chrono::seconds Timeout_Short{kIs_Timeout_Debug ? 300 : 15};
 
 		I_ServerOps &_server;
 		std::shared_ptr<Client> _client;

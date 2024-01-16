@@ -41,10 +41,10 @@ public:
 	void Reconnect_Client(std::shared_ptr<game::Client> &client) override;
 
 private:
-	static constexpr bool kIs_Timeout_Debug = false;
-	static constexpr std::chrono::minutes Timeout_Long{kIs_Timeout_Debug ? 5 : 2};
-	static constexpr bool kIs_Interval_Debug = false;
-	static constexpr std::chrono::seconds Interval_Keep_Alive{kIs_Interval_Debug ? 30 : 5};
+	static constexpr bool kIs_Timeout_Debug = true;
+	static constexpr std::chrono::minutes Timeout_Long{kIs_Timeout_Debug ? 15 : 2};
+	static constexpr bool kIs_Interval_Debug = true;
+	static constexpr std::chrono::seconds Interval_Keep_Alive{kIs_Interval_Debug ? 60 : 5};
 
 	const size_t _lim_clients;
 	const size_t _lim_rooms;
