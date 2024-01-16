@@ -33,7 +33,7 @@ public class Controller {
 
     private final Logger logger = LogManager.getLogger();
 
-    private static final int RECEIVE_MSG_TIMEOUT_MS = 15_000;
+    private static final int RESPONSE_MSG_TIMEOUT_MS = 15_000;
     private static final int SOCKET_CONNECTION_TIMEOUT_MS = 10_000;
     private static final int RECONNECT_TIMEOUT_MS = 60_000;
     private static final int ROOM_CODE_LENGTH = 4;
@@ -432,7 +432,7 @@ public class Controller {
     private Message awaitMessage(CompletableFuture<Message> future) throws TimeoutException, IOException {
         logger.trace("Awaiting Message");
         try {
-            Message message = future.get(RECEIVE_MSG_TIMEOUT_MS, TimeUnit.MILLISECONDS); // throws TimeoutException
+            Message message = future.get(RESPONSE_MSG_TIMEOUT_MS, TimeUnit.MILLISECONDS); // throws TimeoutException
             logger.trace("Got Message");
             return message;
         } catch (ExecutionException | InterruptedException e) {

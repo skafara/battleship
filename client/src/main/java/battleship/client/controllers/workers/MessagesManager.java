@@ -21,8 +21,8 @@ public class MessagesManager implements Runnable {
 
     private final Logger logger = LogManager.getLogger();
 
-    private static final boolean IS_DEBUG = false;
-    private static final int MESSAGE_TIMEOUT_MS = IS_DEBUG ? 60_000 : 15_000;
+    private static final boolean IS_DEBUG = true;
+    private static final int ANY_MESSAGE_TIMEOUT_MS = IS_DEBUG ? 150_000 : 15_000;
     private final Object ACCESS_EXPECTED_MESSAGE = new Object();
 
     private final Communicator communicator;
@@ -63,7 +63,7 @@ public class MessagesManager implements Runnable {
                     }
                 }).start();
 
-                Message message = futureMessage.get(lastActive - System.currentTimeMillis() + MESSAGE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                Message message = futureMessage.get(lastActive - System.currentTimeMillis() + ANY_MESSAGE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
                 logger.trace("Message Received In Time: " + message.serialize());
                 lastActive = System.currentTimeMillis();
                 logger.info("Last Active: " + new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(lastActive)));
