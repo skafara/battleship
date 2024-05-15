@@ -1,3 +1,4 @@
+/** Game board field state (type) */
 const FieldState = Object.freeze({
   NONE: "none",
   SHIP: "ship",

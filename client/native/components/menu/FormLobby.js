@@ -40,6 +40,12 @@ const FORM_TEXTS = {
   },
 };
 
+/**
+ * Checks whether the given code is a valid room code
+ * Valid room code is a 4-digit number
+ * @param code Room code
+ * @returns Bool
+ */
 const isValidCode = (code) => {
   if (code.length != 4) {
     return false;
@@ -48,6 +54,10 @@ const isValidCode = (code) => {
   return Number.isInteger(parseInt(code));
 };
 
+/**
+ * Stage for joining or creating a room
+ * @param props communicator (TCP socket message communicator), onRoomJoined (handler on room join)
+ */
 const FormLobby = (props) => {
   const [formState, setFormState] = useState({
     form: {
@@ -66,14 +76,13 @@ const FormLobby = (props) => {
     },
   });
 
-  const inputCodeRef = useRef("7938");
+  const inputCodeRef = useRef("");
 
   const handleCodeInputTextChange = (text) => {
     inputCodeRef.current = text;
   };
 
   const handleRoomNotExists = () => {
-    console.log("aaa");
     setFormState((old) => {
       return {
         ...old,

@@ -6,6 +6,9 @@ import {
 import { config } from "@gluestack-ui/config";
 import Main from "./components/Main";
 
+/**
+ * Application entry point
+ */
 export default () => {
   return (
     <GluestackUIProvider config={config}>

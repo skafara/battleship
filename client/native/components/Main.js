@@ -18,6 +18,9 @@ import FormBoard from "./game/FormBoard";
 import Game from "./game/Game";
 import FieldState from "./game/FieldState";
 
+/**
+ * Application stages (screens)
+ */
 const Stages = Object.freeze({
   CONNECT: "connect",
   LOBBY: "lobby",
@@ -26,7 +29,9 @@ const Stages = Object.freeze({
 });
 
 const Main = () => {
+  /** Active stage */
   const [stage, setStage] = useState(Stages.CONNECT);
+  /** Object holding the state of the application and game */
   const [gameState, setGameState] = useState({
     code: "",
     isTurning: false,
@@ -52,9 +57,15 @@ const Main = () => {
   const [showConnectionTerminatedModal, setShowConnectionTerminatedModal] =
     useState(false);
 
+  /** Ref to TCP socket message communicator */
   const communicatorRef = useRef();
   const [formConnectState, setFormConnectState] = useState();
 
+  /** Handles established connection to the server
+   * Sets up server message handlers and updates the stage
+   * @param {Communicator} communicator - TCP socket message communicator
+   * @param {Object} values - Form values
+   */
   const handleConnectionEstablished = (communicator, values) => {
     communicatorRef.current = communicator;
     setGameState((old) => {
@@ -94,10 +105,12 @@ const Main = () => {
     communicator.on("GAME_END", handleGameEnd);
 
     const interval = setInterval(
+      // Send keep alive message every 5 seconds
       () => communicator.write("KEEP_ALIVE\n"),
       5000
     );
     communicator.client.on("close", () => {
+      // Stop sending keep alive messages on connection close (server termination, error)
       clearInterval(interval);
       setStage(Stages.CONNECT);
       setShowConnectionTerminatedModal(true);
@@ -296,6 +309,12 @@ const Main = () => {
     await audio.playAsync();
   };
 
+  /**
+   * Handles player turn on field - sends TURN message to the server and waits for TURN_RESULT,
+   * based on the result updates the game state
+   * @param row Board row
+   * @param col Board column
+   */
   const handleMove = (row, col) => {
     setGameState((old) => {
       return { ...old, isTurning: true };

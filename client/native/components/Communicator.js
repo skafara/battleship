@@ -1,3 +1,6 @@
+/**
+ * TCP socket message communicator and handler processor
+ */
 class Communicator {
   constructor(client) {
     this.client = client;
@@ -7,6 +10,11 @@ class Communicator {
     this.client.on("data", (data) => this.process(data));
   }
 
+  /**
+   * Processes the data received from the server
+   * and calls the appropriate handler, if a message is completed and a handler is registered
+   * @param data - data received from the server
+   */
   process(data) {
     this.buffer += data.toString();
     while (this.buffer.includes("\n")) {
@@ -36,15 +44,29 @@ class Communicator {
     }
   }
 
+  /**
+   * Sends a message to the server
+   * @param msg Message
+   */
   write(msg) {
     this.client.write(msg);
     console.log("Sent: " + msg);
   }
 
+  /**
+   * Registers a handler for a specific message type which is called when a message of that type is received
+   * @param msgType Message type
+   * @param handler Handler (one parameter - array of message parameters)
+   */
   on(msgType, handler) {
     this.handlers.set(msgType, handler);
   }
 
+  /**
+   * Registers a disposable handler for a specific message type which is called and forgotten when a message of that type is received
+   * @param msgType Message type
+   * @param handler Handler (one parameter - array of message parameters)
+   */
   wait(msgType, handler) {
     this.waitHandlers.set(msgType, handler);
   }

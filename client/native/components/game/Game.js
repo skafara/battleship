@@ -18,8 +18,12 @@ import { useState } from "react";
 import { isBoardValidMove } from "./validateBoard";
 import { useWindowDimensions } from "react-native";
 
+/**
+ * Stage for playing the game
+ * @param props communicator (TCP socket message communicator), state (game state object), winner (game winner if any), onMove (handler on player turn), onRoomLeft (handler on room leave), onNewGame (handler on new game request)
+ */
 const Game = (props) => {
-  const windowDimensions = useWindowDimensions();
+  const windowDimensions = useWindowDimensions(); // app viewport dimensions
 
   const [formState, setFormState] = useState({
     isDisabled: false,
@@ -36,9 +40,11 @@ const Game = (props) => {
 
   const handleFieldClicked = (row, col) => {
     if (!props.state.player.isOnTurn || props.state.isTurning) {
+      // validate the ability to turn
       return;
     }
     if (!isBoardValidMove(props.state.opponent.board, row, col)) {
+      // validate the turn
       return;
     }
 

@@ -53,6 +53,10 @@ const isValidPort = (port) => {
   return Number.isInteger(portNumber) && portNumber >= 0 && portNumber <= 65535;
 };
 
+/**
+ * Stage for connecting to the server
+ * @param {Object} props - onConnectionEstablished (handler on normally established connection), onRejoin (handler on established connection with prior disconnect), values (form input values)
+ */
 const FormConnect = (props) => {
   const [formState, setFormState] = useState({
     form: {
@@ -74,6 +78,7 @@ const FormConnect = (props) => {
 
   const [showErrorModal, setShowErrorModal] = useState();
 
+  /** Form input values */
   const formInputsRef = useRef({
     address: "",
     port: "",
@@ -81,6 +86,7 @@ const FormConnect = (props) => {
   });
 
   if (props.values) {
+    // If values are passed, set the form inputs, otherwise keep them empty
     formInputsRef.current.address = props.values.address;
     formInputsRef.current.port = props.values.port;
     formInputsRef.current.nickname = props.values.nickname;
@@ -154,11 +160,13 @@ const FormConnect = (props) => {
 
     client.on("connect", () => {
       const communicator = new Communicator(client);
-      communicator.write(`NICKNAME_SET|${inputNickname}\n`);
+      communicator.write(`NICKNAME_SET|${inputNickname}\n`); // Try to set the nickname
       communicator.wait("ACK", () =>
+        // Nickname not taken, set successfully, connection established
         props.onConnectionEstablished(communicator, formValues)
       );
       communicator.wait("NICKNAME_EXISTS", () => {
+        // Nickname already taken (active)
         setFormState((old) => {
           return {
             ...old,
@@ -176,12 +184,16 @@ const FormConnect = (props) => {
         });
         client.destroy();
       });
-      communicator.wait("REJOIN", (params) =>
-        props.onRejoin(communicator, formValues, params)
+      communicator.wait(
+        "REJOIN",
+        (
+          params // Nickname already taken (inactive for an acceptable time period), rejoin, restore game state
+        ) => props.onRejoin(communicator, formValues, params)
       );
     });
 
     client.on("timeout", () => {
+      // On connection timeout
       setShowErrorModal(true);
       setFormState((old) => {
         return {
@@ -193,6 +205,7 @@ const FormConnect = (props) => {
     });
 
     client.on("error", () => {
+      // On connection error
       setShowErrorModal(true);
       setFormState((old) => {
         return {

@@ -1,6 +1,10 @@
 import { View, Pressable, Text, Center } from "@gluestack-ui/themed";
 import FieldState from "./FieldState";
 
+/**
+ * Represents the game board
+ * @param props board (game board to visualise), onFieldClicked (handler on field click), highlight (highlighted fields)
+ */
 const Board = (props) => {
   const handleClick = (row, col) => {
     if (row == 0 || col == 0) {

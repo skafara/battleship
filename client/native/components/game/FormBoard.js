@@ -20,6 +20,10 @@ import { useState } from "react";
 import FieldState from "./FieldState";
 import { isBoardValid } from "./validateBoard";
 
+/**
+ * Stage for preparing the game board
+ * @param props communicator (TCP socket message communicator), code (game room code), onRoomLeft (handler on room leave), onBoardReady (handler on ready board)
+ */
 const FormBoard = (props) => {
   const [formState, setFormState] = useState({
     isDisabled: false,
@@ -53,6 +57,7 @@ const FormBoard = (props) => {
     });
 
     let msg = "BOARD_READY";
+    // construct the message parameters
     for (let i = 0; i < boardState.length; i++) {
       if (boardState[i] == FieldState.SHIP) {
         const row = Math.floor(i / 10);
@@ -73,6 +78,7 @@ const FormBoard = (props) => {
         copy[row * 10 + col] = FieldState.NONE;
       }
       if (!formState.isBoardValid && isBoardValid(copy)) {
+        // validate the move
         setFormState((old) => {
           return { ...old, isBoardValid: true };
         });
