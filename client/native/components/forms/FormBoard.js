@@ -14,11 +14,11 @@ import {
   Text,
   AlertCircleIcon,
 } from "@gluestack-ui/themed";
-import Board from "./Board";
+import Board from "../game/Board";
 import { Linking, Pressable } from "react-native";
 import { useState } from "react";
-import FieldState from "./FieldState";
-import { isBoardValid } from "./validateBoard";
+import FieldState from "../../util/FieldState";
+import { isBoardValid } from "../../util/validateBoard";
 
 /**
  * Stage for preparing the game board

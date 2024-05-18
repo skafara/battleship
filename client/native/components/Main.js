@@ -12,11 +12,11 @@ import {
 } from "@gluestack-ui/themed";
 import { useRef, useState } from "react";
 import { Audio } from "expo-av";
-import FormConnect from "./menu/FormConnect";
-import FormLobby from "./menu/FormLobby";
-import FormBoard from "./game/FormBoard";
+import FormConnect from "./forms/FormConnect";
+import FormLobby from "./forms/FormLobby";
+import FormBoard from "./forms/FormBoard";
 import Game from "./game/Game";
-import FieldState from "./game/FieldState";
+import FieldState from "../util/FieldState";
 
 /**
  * Application stages (screens)

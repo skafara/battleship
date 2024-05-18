@@ -1,5 +1,5 @@
 import { View, Pressable, Text, Center } from "@gluestack-ui/themed";
-import FieldState from "./FieldState";
+import FieldState from "../../util/FieldState";
 
 /**
  * Represents the game board

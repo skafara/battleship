@@ -30,7 +30,7 @@ import {
 } from "@gluestack-ui/themed";
 import { useRef, useState } from "react";
 import TcpSocket from "react-native-tcp-socket";
-import Communicator from "../Communicator";
+import Communicator from "../../util/Communicator";
 
 const FORM_TEXTS = {
   form: {

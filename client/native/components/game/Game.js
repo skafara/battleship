@@ -15,7 +15,7 @@ import {
 } from "@gluestack-ui/themed";
 import Board from "./Board";
 import { useState } from "react";
-import { isBoardValidMove } from "./validateBoard";
+import { isBoardValidMove } from "../../util/validateBoard";
 import { useWindowDimensions } from "react-native";
 
 /**
